@@ -99,6 +99,13 @@
     margin:-2px 0 10px;
     line-height:1.75;
   }
+  .law-desc{
+    display:block;
+    font-size:11px;
+    color:var(--accent);
+    line-height:1.6;
+    margin-top:2px;
+  }
   label.row{
     display:flex;
     align-items:flex-start;
@@ -187,6 +194,21 @@
     font-family:var(--sans);
     background:#101012; color:var(--ink); border-color:var(--line);
   }
+  label.row input[type="text"], label.row input[type="number"]{
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:4px 7px;
+    font-size:12.5px;
+    font-family:var(--sans);
+    background:#101012;
+    color:var(--ink);
+    vertical-align:middle;
+  }
+  label.row input[type="text"]:focus, label.row input[type="number"]:focus,
+  .field-inline input[type="text"]:focus, .field-inline input[type="number"]:focus{
+    outline:none;
+    border-color:var(--accent);
+  }
   input[type="text"].wide, textarea.wide{
     width:100%;
     border:1px solid var(--line);
@@ -250,10 +272,11 @@
     margin-bottom:10px;
   }
   .preview-head h2{
-    font-family:var(--serif);
+    font-family:var(--sans);
     font-size:15px;
+    font-weight:700;
     margin:0;
-    letter-spacing:1px;
+    letter-spacing:0.5px;
   }
   .actions{display:flex; gap:8px;}
   .actions button{
@@ -275,7 +298,7 @@
     border:1px solid var(--line);
     border-radius:4px;
     padding:26px 30px;
-    font-family:var(--serif);
+    font-family:var(--sans);
     font-size:14.5px;
     line-height:2.05;
     white-space:pre-wrap;
@@ -346,15 +369,22 @@
 
     <fieldset>
       <legend>被告</legend>
-      <div class="field-inline">被告姓名：<input type="text" id="defendantFullName" placeholder="例：林姿瑩" style="width:140px"></div>
-      <div class="sub-note">此姓名僅用於自動生成「主文」段落之被告稱謂，不影響理由欄其他段落（理由欄仍以「被告」稱之，符合聲請簡易判決處刑書之通例）。</div>
+      <div id="defendantItems"></div>
+      <button type="button" class="btn-mini" onclick="addDefendantItem()">＋新增被告</button>
+      <div class="sub-note">姓名僅用於自動生成「主文」段落之被告稱謂，不影響理由欄其他段落（理由欄仍以「被告」稱之，符合聲請簡易判決處刑書之通例）。若新增2名以上被告，案由欄將自動改為「上列被告等因…」。</div>
+      <div class="sub-note" style="margin-top:8px; padding:8px 10px; border-left:3px solid var(--accent); background:var(--accent-soft); color:var(--ink);">
+        <strong style="color:var(--accent);">繕打前注意事項：</strong><br>
+        1. 記得查戶籍地址是否變動<br>
+        2. 若為役男年齡，要確認是否服役中<br>
+        3. 注意是否在監押
+      </div>
     </fieldset>
 
     <fieldset>
       <legend>案由欄</legend>
       <div class="field-inline">
         <label class="row" style="margin:0"><input type="checkbox" id="causeHasViolation"> 違反</label>
-        <span>案由之罪名：</span><input type="text" id="caseCauseName" value="洗錢防制法等" style="width:160px">
+        <span>案由之罪名：</span><input type="text" id="caseCauseName" value="" style="width:160px">
         <span>案件</span>
       </div>
       <div class="grp-title">聲請簡易判決處刑案號</div>
@@ -436,7 +466,6 @@
       <label class="row"><input type="checkbox" class="crimeChk" value="duiAlcohol"> 不能安全駕駛罪－酒精（刑法第185條之3第1項第1款或第2款）</label>
       <label class="row"><input type="checkbox" class="crimeChk" value="duiDrug"> 不能安全駕駛罪－毒品（刑法第185條之3第1項第3款：尿液或血液所含毒品、麻醉藥品或其代謝物達行政院公告之品項及濃度值以上）</label>
       <label class="row"><input type="checkbox" class="crimeChk" value="bankAccountProvide"> 無正當理由交付、提供合計3個以上金融帳戶予他人使用罪（洗錢防制法第22條第3項第2款，為獨立正犯罪名，非幫助犯）</label>
-      <div class="sub-note" style="color:#e0a25c;">提醒：您先前提及「加重竊盜（刑法第339條之4）」，經核對現行法，刑法第339條之4為「加重詐欺取財罪」，加重竊盜之正確條文應為<strong>刑法第321條</strong>，已依此建立選項，請留意勿混用。</div>
       <label class="row"><input type="checkbox" class="crimeChk" value="custom"> 其他罪名（自訂）</label>
       <div class="indent-fields" id="crime_custom_box">
         <textarea class="wide" id="crime_custom_text" placeholder="請輸入自訂罪名及法條，例：幫助犯個人資料保護法第41條之罪"></textarea>
@@ -455,13 +484,30 @@
       <div class="sub-note">以下各項預設不啟用；勾選後請自行填入該段落之完整文字，系統將依規定順序插入對應位置。</div>
 
       <label class="row"><input type="checkbox" id="advLegalChange"> 法律變更（新舊法比較）</label>
-      <div class="indent-fields" id="advLegalChange_box"><textarea class="wide" id="advLegalChangeText" placeholder="例：被告行為後，洗錢防制法第19條業於……修正公布，比較新舊法結果，以修正前（後）規定較有利於被告，應適用……"></textarea></div>
+      <div class="indent-fields" id="advLegalChange_box">
+        <textarea class="wide" id="advLegalChangeText" placeholder="例：被告行為後，洗錢防制法第19條業於……修正公布，比較新舊法結果，以修正前（後）規定較有利於被告，應適用……"></textarea>
+        <details style="margin-top:8px;">
+          <summary style="cursor:pointer; font-size:12px; font-weight:700; color:var(--accent); padding:4px 0;">參考：常見法規最近兩次修正沿革（公布日／施行日／修正條號）</summary>
+          <div style="margin-top:6px; font-size:12px; line-height:1.9; background:#101012; border:1px solid var(--line); border-radius:4px; padding:10px 12px; color:var(--ink-soft); white-space:pre-wrap;">【洗錢防制法】
+最近一次：113年7月31日總統華總一義字第11300068971號令修正公布全文31條；除第6、11條之施行日期由行政院定之外，自公布日（113年7月31日）施行。第6、11條經113年11月19日行政院院臺法字第1131029597號令定自113年11月30日施行。
+前一次：112年6月14日總統華總一義字第11200050491號令修正公布第16條條文；並增訂第15-1、15-2條條文；自公布日施行。
+
+【詐欺犯罪危害防制條例】
+最近一次：114年12月30日立法院三讀通過部分條文修正草案，115年1月21日總統公布，115年1月23日施行。修正第7條至第11條、第13條、第42條、第43條、第44條、第46條、第47條及第50條條文（含加重詐欺罪三級化重刑、第47條自白減刑要件加嚴等）。
+前一次（制定）：113年7月12日立法院三讀通過，113年7月31日總統公布。除第19、20、22、24條、第39條第2至5項（流量管理等措施部分）及第40條第1項第6款之施行日期由行政院定之外，自公布日（113年7月31日）施行。</div>
+        </details>
+      </div>
 
       <label class="row"><input type="checkbox" id="advPrepAttempt"> 預備、未遂</label>
       <div class="indent-fields" id="advPrepAttempt_box"><textarea class="wide" id="advPrepAttemptText" placeholder="例：被告已著手於……行為，惟因……而未生……結果，為未遂犯，依刑法第……條規定，得按既遂犯之刑減輕之。"></textarea></div>
 
       <label class="row"><input type="checkbox" id="advAbsorption"> 吸收關係（法條競合）</label>
-      <div class="indent-fields" id="advAbsorption_box"><textarea class="wide" id="advAbsorptionText" placeholder="例：被告……之低度行為為……之高度行為所吸收，不另論罪。"></textarea></div>
+      <div class="indent-fields" id="advAbsorption_box">
+        <div class="sub-note">固定句型：「被告＿＿＿之低度行為為＿＿＿之高度行為所吸收，不另論罪。」僅需填入下列兩個空格。</div>
+        <div class="field-inline">低度行為：<input type="text" class="wide" id="advAbsorptionLow" style="width:220px" placeholder="例：偽造私文書"></div>
+        <div class="field-inline">高度行為：<input type="text" class="wide" id="advAbsorptionHigh" style="width:220px" placeholder="例：行使偽造私文書"></div>
+        <label class="row"><input type="checkbox" id="advAbsorptionMultiple"> 本案為數罪／多次同類犯行，加註「均」字（例：被告偽造私文書之低度行為，均為其行使偽造私文書之高度行為所吸收，均不另論罪）</label>
+      </div>
 
       <label class="row"><input type="checkbox" id="advContinuous"> 接續犯</label>
       <div class="indent-fields" id="advContinuous_box"><textarea class="wide" id="advContinuousText" placeholder="例：被告先後多次……之行為，時間緊接、地點同一，各行為之獨立性極為薄弱，應論以接續犯，僅論以一罪。"></textarea></div>
@@ -470,7 +516,12 @@
       <div class="indent-fields" id="advOngoing_box"><textarea class="wide" id="advOngoingText" placeholder="例：被告……之違法狀態持續至……止，於此期間內犯罪均屬繼續中，應論以繼續犯，僅論以一罪。"></textarea></div>
 
       <label class="row"><input type="checkbox" id="advChangeCharge"> 變更起訴法條</label>
-      <div class="indent-fields" id="advChangeCharge_box"><textarea class="wide" id="advChangeChargeText" placeholder="例：聲請簡易判決處刑意旨認被告係犯……罪，惟依起訴事實所載，應變更檢察官所引應適用法條為……，並依刑事訴訟法第300條規定變更起訴法條。"></textarea></div>
+      <div class="indent-fields" id="advChangeCharge_box">
+        <div class="sub-note">將自動組成：「公訴意旨雖認被告係犯＿＿＿罪，惟＿＿＿，爰依刑事訴訟法第300條規定變更起訴法條，變更為＿＿＿。」勾選後將自動一併勾選下方「據上論斷」之刑事訴訟法第300條選項。</div>
+        <div class="field-inline">公訴意旨所認之罪：<input type="text" class="wide" id="advChangeChargeFrom" style="width:220px" placeholder="例：幫助詐欺取財及幫助洗錢罪"></div>
+        <div class="field-inline">理由（自由填寫）：<textarea class="wide" id="advChangeChargeReason" placeholder="例：因與洗錢防制法第22條第3項第2款部分之基本社會事實同一，並經本院告知所犯法條之旨，無礙當事人攻擊防禦之機會"></textarea></div>
+        <div class="field-inline">變更後所犯之罪：<input type="text" class="wide" id="advChangeChargeTo" style="width:220px" placeholder="例：洗錢防制法第22條第3項第2款之罪"></div>
+      </div>
 
       <label class="row"><input type="checkbox" id="advProsecutorError"> 檢察官誤會、疏漏部分</label>
       <div class="indent-fields" id="advProsecutorError_box"><textarea class="wide" id="advProsecutorErrorText" placeholder="例：聲請簡易判決處刑意旨雖認被告此部分亦涉犯……罪，惟查……，尚屬檢察官誤會（漏未論及……），併此敘明。"></textarea></div>
@@ -479,14 +530,17 @@
     <fieldset>
       <legend>罪數關係</legend>
       <label class="row"><input type="radio" name="concursus" value="single"> 單純一罪（僅論一罪，不涉想像競合或數罪併罰）</label>
-      <label class="row"><input type="radio" name="concursus" value="imagine" checked> 想像競合犯：以一行為觸犯數罪名，依刑法第55條規定，從一重論以＿＿罪</label>
-      <div class="indent-fields show" id="concursus_imagine_box">
+      <label class="row"><input type="radio" name="concursus" value="imagine"> 想像競合犯：以一行為觸犯數罪名，依刑法第55條規定，從一重論以＿＿罪</label>
+      <div class="indent-fields" id="concursus_imagine_box">
         <div class="field-inline">從一重論以何罪：<input type="text" id="heavierCrime" class="wide" value="幫助洗錢一罪" style="width:220px"></div>
         <div class="field-inline">侵害法益描述（選填）：<input type="text" id="victimHarm" class="wide" value="各侵害3名告訴人之財產法益" style="width:260px"></div>
+        <div class="field-inline">主要罪名（供主文自動生成與宣告刑試算使用）：
+          <select id="heavierCrimeKey"><option value="">（不試算）</option></select>
+        </div>
       </div>
       <label class="row"><input type="radio" name="concursus" value="separate"> 數罪併罰（分論併罰，依刑法第51條定應執行刑）</label>
-      <div class="field-inline">主要罪名（供主文自動生成與宣告刑試算使用；單純一罪／想像競合模式下適用）：
-        <select id="heavierCrimeKey"><option value="">（不試算）</option></select>
+      <div class="indent-fields" id="concursus_separate_box">
+        <label class="row"><input type="checkbox" id="separateProportionality"> 加註「罪責相當之比例原則及多數犯罪責任遞減原則」定應執行刑論述</label>
       </div>
       <div class="sub-note" id="joinedCaseHint">若於上方「案由欄」勾選「有移送併辦」，本段將自動加入移送併辦意旨書之併予審理敘明（依所選之併辦關係：想像競合裁判上一罪／同一事實關係）。單純一罪模式下，若有移送併辦，仍會單獨加註併辦審理之敘明。</div>
     </fieldset>
@@ -502,13 +556,27 @@
 
     <fieldset>
       <legend>減輕／加重事由</legend>
-      <label class="row"><input type="radio" name="confession" value="none" checked> 被告未自白（僅坦承提供帳戶，否認幫助故意），不予依洗錢防制法第23條第3項減輕</label>
+      <div class="sub-note">以下均為選填，非每案均有減輕／加重事由；本區塊之敘述僅於個別勾選時才會生成。若不涉及洗錢防制法第23條第3項自白減輕之討論（例如非洗錢罪名），下方兩個自白選項均可不勾選，將不生成該段落。</div>
+      <label class="row"><input type="radio" name="confession" value="none"> 被告未自白（僅坦承提供帳戶，否認幫助故意），不予依洗錢防制法第23條第3項減輕</label>
       <label class="row"><input type="radio" name="confession" value="yes"> 被告偵查中即自白犯行，依洗錢防制法第23條第3項前段規定減輕其刑</label>
       <div class="indent-fields" id="confession_yes_box">
         <label class="row"><input type="checkbox" id="extendedConfessionReason"> 加註「聲請簡易判決致無從於審判中自白」之例外適用說明（被告僅於偵查中自白，因檢察官逕向法院聲請簡易判決處刑，致其無從於審判中自白時使用）</label>
       </div>
       <label class="row"><input type="checkbox" id="surrender"> 被告符合自首要件，依刑法第62條前段規定減輕其刑</label>
       <label class="row"><input type="checkbox" id="recidivist"> 被告構成累犯，依刑法第47條第1項規定加重其刑（將置於「加重事由」段落）</label>
+
+      <label class="row"><input type="checkbox" id="juvenile112"> 該當兒童及少年福利與權益保障法第112條第1項</label>
+      <div class="indent-fields" id="juvenile112_box">
+        <div class="grp-title">請選擇該當類型（法律效果不同，請務必正確選擇）</div>
+        <label class="row"><input type="radio" name="juvenile112Type" value="coOffend" checked> 教唆、幫助或利用兒童少年犯罪，或與之共同實施犯罪（<strong style="color:var(--accent)">總則加重</strong>：非獨立罪名，法定本刑不變，一般不影響是否得易科罰金）</label>
+        <label class="row"><input type="radio" name="juvenile112Type" value="intentional"> 故意對兒童及少年犯罪（<strong style="color:var(--accent)">分則加重</strong>：視為獨立罪名類型，法定本刑因加重至二分之一而提高，<strong style="color:#ff8a65">可能導致原可易科罰金之罪變成不得易科罰金</strong>，請特別注意）</label>
+        <div class="field-inline" style="margin-top:6px;">少年代稱：<input type="text" id="juvenile112Alias" class="wide" style="width:160px" placeholder="例：顏○玲"></div>
+        <div class="sub-note">總則加重（共同實施／教唆幫助利用）：主文罪名描述改為「成年人與少年共同犯＿＿罪」，不影響法定本刑之易科罰金判斷基準。<br>分則加重（故意對其犯罪）：主文罪名描述改為「成年人故意對少年犯＿＿罪」，且下方「宣告刑試算」與易科罰金判斷將自動以「法定最重本刑×1.5」重新計算，請留意可能出現的易科罰金資格警示。</div>
+        <details style="margin-top:8px;">
+          <summary style="cursor:pointer; font-size:12px; font-weight:700; color:var(--accent); padding:4px 0;">兒童及少年福利與權益保障法第112條第1項全文</summary>
+          <div style="margin-top:6px; font-size:12px; line-height:1.9; background:#101012; border:1px solid var(--line); border-radius:4px; padding:10px 12px; color:var(--ink-soft); white-space:pre-wrap;">成年人教唆、幫助或利用兒童及少年犯罪或與之共同實施犯罪或故意對其犯罪者，加重其刑至二分之一。但各該罪就被害人係兒童及少年已定有特別處罰規定者，從其規定。</div>
+        </details>
+      </div>
     </fieldset>
 
     <fieldset>
@@ -533,6 +601,7 @@
     <fieldset>
       <legend>緩刑宣告</legend>
       <label class="row"><input type="checkbox" id="hasProbation"> 宣告緩刑</label>
+      <div class="sub-note" id="probationEligibilityHint" style="margin-top:-4px;"></div>
       <div class="indent-fields show" id="hasProbation_box">
         <div class="field-inline">緩刑期間：<input type="number" id="probationYears" value="3" style="width:56px"> 年</div>
         <div class="grp-title">緩刑法律依據（可複選）</div>
@@ -545,6 +614,15 @@
           <button type="button" class="btn-mini" onclick="addConditionItem()">＋新增賠償條件</button>
           <div class="field-inline" style="margin-top:8px">履行期限：自本判決確定之日起 <input type="number" id="conditionDeadlineMonths" value="6" style="width:50px"> 月內</div>
         </div>
+
+        <label class="row"><input type="checkbox" id="hasEducationCondition"> 命完成法治教育或其他處遇措施（刑法第74條第2項第8款）</label>
+        <div class="indent-fields" id="hasEducationCondition_box">
+          <div class="field-inline">場次／內容：接受<input type="text" id="educationContent" value="法治教育" style="width:100px">
+            <input type="number" id="educationSessions" value="2" style="width:44px"> 場次
+          </div>
+          <div class="field-inline">履行期限：自本判決確定之日起 <input type="number" id="educationDeadlineMonths" value="1" style="width:50px"> 月內</div>
+        </div>
+
         <label class="row"><input type="checkbox" id="probRevokeClause"> 附「未履行負擔且情節重大，得依刑法第75條之1第1項第4款撤銷緩刑」之敘明</label>
 
         <div class="grp-title">緩刑應付保護管束（可複選，將於緩刑段落中加註對應法條及敘明）</div>
@@ -593,30 +671,44 @@
     <fieldset>
       <legend>據上論斷</legend>
       <div class="sub-note">勾選本案適用之程序法條，將自動組成「據上論斷，依＿＿＿，逕以簡易判決處刑如主文」一段。</div>
-      <label class="row"><input type="checkbox" class="disposalLaw" value="449-1" checked> 刑事訴訟法第449條第1項前段（第一審法院依被告偵查中自白或其他現存證據已足認定犯罪者，得因檢察官聲請逕以簡易判決處刑）</label>
-      <label class="row"><input type="checkbox" class="disposalLaw" value="449-2"> 刑事訴訟法第449條第2項（檢察官依通常程序起訴，經被告自白犯罪，法院認宜以簡易判決處刑者，亦得逕以簡易判決處刑）</label>
-      <label class="row"><input type="checkbox" class="disposalLaw" value="449-3" checked> 刑事訴訟法第449條第3項（所科之刑以宣告緩刑、得易科罰金或得易服社會勞動之有期徒刑及拘役或罰金為限）</label>
-      <label class="row"><input type="checkbox" class="disposalLaw" value="451-1-4"> 刑事訴訟法第451條之1第4項（法院應於檢察官求刑或緩刑宣告請求之範圍內為判決，除有但書所列例外情形）</label>
-      <label class="row"><input type="checkbox" class="disposalLaw" value="454-2" checked> 刑事訴訟法第454條第2項（簡易判決書得以簡略方式為之，與聲請簡易判決處刑書記載相同者得引用之）</label>
+      <label class="row" id="disposalLaw300Row"><input type="checkbox" class="disposalLaw" value="300" id="disposalLaw300"><span>刑事訴訟法第300條<span class="law-desc">得就起訴之犯罪事實，變更檢察官所引應適用之法條；本案如有「變更起訴法條」時建議勾選</span></span></label>
+      <div class="sub-note" id="disposalLaw300LockHint" style="display:none;"></div>
+      <label class="row"><input type="checkbox" class="disposalLaw" value="449-1" checked><span>刑事訴訟法第449條第1項前段<span class="law-desc">第一審法院依被告偵查中自白或其他現存證據已足認定犯罪者，得因檢察官聲請逕以簡易判決處刑</span></span></label>
+      <label class="row"><input type="checkbox" class="disposalLaw" value="449-2"><span>刑事訴訟法第449條第2項<span class="law-desc">檢察官依通常程序起訴，經被告自白犯罪，法院認宜以簡易判決處刑者，亦得逕以簡易判決處刑</span></span></label>
+      <label class="row" id="disposalLaw449_3Row"><input type="checkbox" class="disposalLaw" value="449-3" checked disabled><span>刑事訴訟法第449條第3項 <strong style="color:#7fd88f; font-size:10.5px; font-weight:700;">🔒 恆定勾選：簡易判決程序必然適用本項規定，不可取消。</strong><span class="law-desc">所科之刑以宣告緩刑、得易科罰金或得易服社會勞動之有期徒刑及拘役或罰金為限</span></span></label>
+      <label class="row" id="disposalLaw450_1Row"><input type="checkbox" class="disposalLaw" value="450-1" id="disposalLaw450_1"><span>刑事訴訟法第450條第1項<span class="law-desc">以簡易判決處刑時，得併科沒收或為其他必要之處分；本案有宣告沒收時建議勾選</span></span></label>
+      <div class="sub-note" id="disposalLaw450_1LockHint" style="display:none;"></div>
+      <label class="row"><input type="checkbox" class="disposalLaw" value="451-1-4"><span>刑事訴訟法第451條之1第4項<span class="law-desc">法院應於檢察官求刑或緩刑宣告請求之範圍內為判決，除有但書所列例外情形</span></span></label>
+      <label class="row"><input type="checkbox" class="disposalLaw" value="454-2" checked><span>刑事訴訟法第454條第2項<span class="law-desc">簡易判決書得以簡略方式為之，與聲請簡易判決處刑書記載相同者得引用之</span></span></label>
     </fieldset>
 
     <fieldset>
       <legend>主文量刑（將依此自動生成「主文」段落）</legend>
-      <div class="field-inline">主刑：有期徒刑 <input type="text" id="mainPenaltyMonths" style="width:50px" value="4"> 月</div>
+      <div class="grp-title">主刑類型（三者擇一）</div>
+      <div class="sub-note" id="mainPenaltyTypeHint" style="color:#ff5555; font-weight:700;"></div>
+
+      <div class="grp-title" style="margin-top:6px;">從一重論以之罪──法律全文</div>
+      <div id="heavyCrimeLawText" style="font-size:12px; line-height:1.9; background:#101012; border:1px solid var(--line); border-radius:4px; padding:10px 12px; color:var(--ink-soft); white-space:pre-wrap;"></div>
+
+      <label class="row" style="margin-top:10px;"><input type="radio" name="mainPenaltyType" class="mainPenaltyType" value="custody" checked> 有期徒刑 <input type="text" id="mainPenaltyMonths" style="width:50px; margin-left:6px;" value="4"> 月</label>
       <div class="sub-note" id="monthRangeHint" style="margin-top:-4px;"></div>
-      <label class="row"><input type="checkbox" id="hasFineInVerdict"> 併科罰金</label>
+      <label class="row"><input type="radio" name="mainPenaltyType" class="mainPenaltyType" value="detention"> 拘役 <input type="text" id="mainPenaltyDetentionDays" style="width:50px; margin-left:6px;" placeholder="日數"> 日</label>
+      <label class="row"><input type="radio" name="mainPenaltyType" class="mainPenaltyType" value="fineOnly"> 罰金（作為主刑，非併科）新臺幣 <input type="text" id="mainPenaltyFineOnly" style="width:80px; margin-left:6px;" placeholder="純數字"> 元</label>
+
+      <label class="row" style="margin-top:10px;"><input type="checkbox" id="hasFineInVerdict"> 併科罰金</label>
+      <div class="sub-note" id="fineShouldHint" style="margin-top:-4px;"></div>
+      <div class="sub-note" id="fineLockHint" style="display:none; margin-top:-4px;"></div>
       <div class="indent-fields show" id="hasFineInVerdict_box">
         <div class="field-inline">罰金金額（純數字）：新臺幣 <input type="text" id="fineAmount" style="width:80px" placeholder="20000（純數字）"> （將自動格式化）</div>
         <div class="sub-note" id="fineRangeHint" style="margin-top:-4px;"></div>
       </div>
       <div class="grp-title">易科罰金／易服勞役折算標準</div>
+      <label class="row"><input type="checkbox" id="showCommuteInVerdict" checked> 主文顯示「得易科罰金／易服勞役」文字</label>
+      <div class="sub-note" id="showCommuteEligibilityHint" style="margin-top:-4px;"></div>
       <label class="row"><input type="radio" name="commuteRateChoice" value="1000" checked> 新臺幣1,000元折算1日</label>
       <label class="row"><input type="radio" name="commuteRateChoice" value="2000"> 新臺幣2,000元折算1日</label>
       <label class="row"><input type="radio" name="commuteRateChoice" value="3000"> 新臺幣3,000元折算1日</label>
       <div class="sub-note" id="commuteWarning" style="display:none; color:#ff3b3b; font-weight:700; border:1px solid #ff3b3b; border-radius:4px; padding:8px 10px; background:rgba(255,59,59,0.08); margin-top:8px;"></div>
-
-      <div class="grp-title" style="margin-top:14px;">從一重論以之罪──法律全文（供核對，依「罪數關係」所選試算用重罪自動帶入）</div>
-      <div id="heavyCrimeLawText" style="font-size:12px; line-height:1.9; background:#101012; border:1px solid var(--line); border-radius:4px; padding:10px 12px; color:var(--ink-soft); white-space:pre-wrap;"></div>
 
       <div class="grp-title" style="margin-top:14px;">主文預覽（自動生成，將併入下方判決全文最上方）</div>
       <div id="verdictPreview" style="font-size:13px; line-height:2; background:#101012; border:1px solid var(--line); border-radius:4px; padding:10px 12px; color:var(--ink); white-space:pre-wrap;"></div>
@@ -628,7 +720,7 @@
 
       <details style="margin-top:14px;">
         <summary style="cursor:pointer; font-size:12.5px; font-weight:700; color:var(--accent); padding:4px 0;">刑法第41條全文</summary>
-        <div style="margin-top:8px; font-size:12px; line-height:1.9; background:#101012; border:1px solid var(--line); border-radius:4px; padding:10px 12px; color:var(--ink-soft); white-space:pre-wrap;">犯最重本刑為五年以下有期徒刑以下之刑之罪，而受六月以下有期徒刑或拘役之宣告者，得以新臺幣一千元、二千元或三千元折算一日，易科罰金。但易科罰金，難收矯正之效或難以維持法秩序者，不在此限。
+        <div style="margin-top:8px; font-size:12px; line-height:1.9; background:#101012; border:1px solid var(--line); border-radius:4px; padding:10px 12px; color:var(--ink-soft); white-space:pre-wrap;">犯<mark style="background:var(--accent); color:#1a1208; padding:0 3px; border-radius:2px;">最重本刑為五年以下有期徒刑以下之刑之罪</mark>，而<mark style="background:var(--accent); color:#1a1208; padding:0 3px; border-radius:2px;">受六月以下有期徒刑或拘役之宣告者</mark>，得以新臺幣一千元、二千元或三千元折算一日，易科罰金。但易科罰金，難收矯正之效或難以維持法秩序者，不在此限。
 依前項規定得易科罰金而未聲請易科罰金者，得以提供社會勞動六小時折算一日，易服社會勞動。
 受六月以下有期徒刑或拘役之宣告，不符第一項易科罰金之規定者，得依前項折算規定，易服社會勞動。
 前二項之規定，因身心健康之關係，執行顯有困難者，或易服社會勞動，難收矯正之效或難以維持法秩序者，不適用之。
@@ -641,10 +733,14 @@
     </fieldset>
 
     <fieldset>
-      <legend>法官／書記官（可留白，於表頭處另填也可）</legend>
+      <legend>法官（可留白，於表頭處另填也可）</legend>
       <div class="field-inline">承辦法官：<input type="text" id="judgeName" value="林書緯" readonly style="background:#232019; color:var(--accent); cursor:not-allowed;"></div>
-      <div class="field-inline">書記官：<input type="text" id="clerkName" placeholder="蘇千雅"></div>
-      <div class="field-inline">聲請/移送檢察官代稱：<input type="text" id="prosecutorName" value="Ａ０１"></div>
+      <div class="field-inline">聲請檢察官：<input type="text" id="prosecutorNameReq" value="Ａ０１" style="width:80px"></div>
+      <div class="field-inline">
+        移送檢察官：<input type="text" id="prosecutorNameJoined" value="" style="width:80px" disabled>
+        <label class="row" style="margin:0 0 0 6px; display:inline-flex;"><input type="checkbox" id="prosecutorJoinedSameAsReq" disabled> 同上</label>
+      </div>
+      <div class="sub-note">移送檢察官欄位僅於上方「案由欄」勾選「有移送併辦」時始可填寫；勾選「同上」代表聲請與移送為同一檢察官。</div>
       <div class="grp-title">判決日期（預設為開啟本工具當下日期，可自行修改）</div>
       <div class="field-inline">
         民國 <input type="number" id="judgeDateYear" style="width:56px">　年
@@ -694,6 +790,26 @@ function addCorrectionItem(prefill){
   document.getElementById('correctionItems').appendChild(div);
   div.querySelectorAll('input,select').forEach(el=>{ el.addEventListener('input', render); el.addEventListener('change', render); });
   render();
+}
+
+let defendantCount = 0;
+function addDefendantItem(name){
+  defendantCount++;
+  const id = 'def_' + defendantCount;
+  const div = document.createElement('div');
+  div.className = 'repeat-block';
+  div.id = id;
+  div.innerHTML = `
+    <button type="button" class="btn-remove" style="float:right" onclick="document.getElementById('${id}').remove(); render();">移除</button>
+    <div class="field-inline">被告姓名：<input type="text" class="wide def-name" style="width:140px" value="${name||''}"></div>
+  `;
+  document.getElementById('defendantItems').appendChild(div);
+  div.querySelectorAll('input').forEach(el=>{ el.addEventListener('input', render); });
+  render();
+}
+
+function getDefendantNames(){
+  return [...document.querySelectorAll('#defendantItems .def-name')].map(el=>el.value.trim()).filter(Boolean);
 }
 
 function addSplitItem(prefill){
@@ -758,22 +874,104 @@ function addForfeitItem(prefill){
         <option value="uncollectedItem">供犯罪所用之物未扣案，欠缺沒收之重要性，依刑法第38條之2第2項不另宣告沒收、追徵</option>
         <option value="noProceeds">查無證據證明被告因本案獲有犯罪所得，不予宣告沒收、追徵</option>
         <option value="lowValue">物品價值輕微（如提款卡等），欠缺刑法上沒收之重要性，依刑法第38條之2第2項不予宣告沒收、追徵</option>
+        <option value="jointForfeit">與其他正犯／共犯（含少年）共同沒收，依刑法第38條之1第1項前段、第3項規定</option>
+        <option value="returnedToVictim">原物已扣案並發還告訴人具領，依刑法第38條之1第5項規定不予宣告沒收或追徵</option>
+        <option value="forgedSeal219">偽造之印章、印文或署押，依刑法第219條規定，不問屬於犯人與否，義務沒收（如偽造文書罪章案件）</option>
         <option value="forfeit">仍應宣告沒收／追徵</option>
         <option value="custom">自訂文字</option>
       </select>
     </div>
-    <div class="field-inline">相關金額／描述：<input type="text" class="wide forf-desc" style="width:280px" placeholder="例：附件一附表二編號2所示48萬元"></div>
+    <div class="field-inline">相關金額／描述：<input type="text" class="wide forf-desc" style="width:280px" placeholder="例：附件一附表二編號2所示48萬元、或「提款卡4張」等物品名稱"></div>
+    <div class="field-inline forf-joint-box" style="display:none">共同沒收對象（如共犯／少年代稱）：<input type="text" class="wide forf-joint-name" style="width:160px" placeholder="例：顏○玲"></div>
+    <div class="field-inline forf-return-box" style="display:none">告訴人代稱：<input type="text" class="wide forf-return-victim" style="width:140px" placeholder="例：Ａ０２"></div>
+    <label class="row"><input type="checkbox" class="forf-seized"> 本案已扣得該物品（將於描述前加註「本案扣得如」）</label>
     <div class="field-inline forf-custom-box" style="display:none">自訂內容：<textarea class="wide forf-custom"></textarea></div>
   `;
   document.getElementById('forfeitItems').appendChild(div);
   const sel = div.querySelector('.forf-type');
   const customBox = div.querySelector('.forf-custom-box');
-  sel.addEventListener('change', ()=>{ customBox.style.display = sel.value==='custom' ? 'flex':'none'; render(); });
-  div.querySelectorAll('input,select,textarea').forEach(el=>el.addEventListener('input', render));
+  const jointBox = div.querySelector('.forf-joint-box');
+  const returnBox = div.querySelector('.forf-return-box');
+  const syncForfBoxes = ()=>{
+    customBox.style.display = sel.value==='custom' ? 'flex':'none';
+    jointBox.style.display = sel.value==='jointForfeit' ? 'flex':'none';
+    returnBox.style.display = sel.value==='returnedToVictim' ? 'flex':'none';
+  };
+  sel.addEventListener('change', ()=>{ syncForfBoxes(); render(); });
+  div.querySelectorAll('input,select,textarea').forEach(el=>{ el.addEventListener('input', render); el.addEventListener('change', render); });
   render();
 }
 
 // ---------- amount formatting ----------
+// ---------- 紅字警示標記（先以控制字元包裹風險文字，最終輸出時escape全文後再替換為<strong>標籤） ----------
+const RED_START = '\u0001';
+const RED_END = '\u0002';
+
+function escapeHtml(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function applyRedMarkers(escapedText){
+  return escapedText.split(RED_START).join('<strong style="color:#ff5555; font-weight:800;">').split(RED_END).join('</strong>');
+}
+
+// 判斷目前所選主要罪名／填寫之主刑，是否不符合刑法第41條易科罰金／易服社會勞動要件
+function isCommuteIneligible(){
+  const sel = getSelectedMainCrime();
+  const useCustody = document.querySelector('.mainPenaltyType[value="custody"]').checked;
+  const monthsRaw = parseInt(document.getElementById('mainPenaltyMonths').value, 10) || 0;
+  const legalIneligible = !!(sel && sel.data.max > 60);
+  const sentenceIneligible = useCustody && monthsRaw > 6;
+  return legalIneligible || sentenceIneligible;
+}
+
+function syncShowCommuteLock(){
+  const cb = document.getElementById('showCommuteInVerdict');
+  const hint = document.getElementById('showCommuteEligibilityHint');
+  if(!cb || !hint) return;
+
+  const useFineOnly = document.querySelector('.mainPenaltyType[value="fineOnly"]').checked;
+  if(useFineOnly){
+    cb.checked = false;
+    cb.disabled = true;
+    hint.style.color = 'var(--ink-soft)';
+    hint.style.fontWeight = '400';
+    hint.textContent = '主刑為罰金時本欄不適用（罰金本身即為金錢刑，不生易科罰金問題），已鎖定。';
+    return;
+  }
+
+  const mode = getConcursusMode();
+  if(mode !== 'imagine' && mode !== 'single'){
+    cb.disabled = false;
+    hint.style.color = 'var(--ink-soft)';
+    hint.style.fontWeight = '400';
+    hint.textContent = '尚未於「罪數關係」選擇單純一罪／想像競合並指定主要罪名，無法自動判斷資格，請自行確認。';
+    return;
+  }
+
+  const sel = getSelectedMainCrime();
+  if(!sel){
+    cb.disabled = false;
+    hint.style.color = 'var(--ink-soft)';
+    hint.style.fontWeight = '400';
+    hint.textContent = '尚未選定主要罪名，無法自動判斷資格，請自行確認。';
+    return;
+  }
+
+  if(isCommuteIneligible()){
+    cb.checked = false;
+    cb.disabled = true;
+    hint.style.color = '#ff5555';
+    hint.style.fontWeight = '700';
+    hint.textContent = '⚠ 初步判斷：本案不符合易科罰金／易服社會勞動要件，已鎖定並取消勾選（原因詳下方紅框說明），如覆核後認仍應勾選，請先調整主刑或罪名。';
+  } else {
+    cb.disabled = false;
+    hint.style.color = '#7fd88f';
+    hint.style.fontWeight = '600';
+    hint.textContent = '✓ 初步判斷：本案形式上符合易科罰金／易服社會勞動要件，僅供參考，實際仍應由您覆核確認。';
+  }
+}
+
 function formatAmount(raw){
   if(!raw) return '';
   const digits = String(raw).replace(/[^\d]/g, '');
@@ -872,6 +1070,29 @@ document.querySelectorAll('.crimeChk').forEach(el=>el.addEventListener('change',
 }));
 bindToggle('#splitByItem', 'splitByItem_box');
 bindToggle('#hasJoinedCase', 'hasJoinedCase_box');
+
+function syncProsecutorJoinedField(){
+  const hasJoined = document.getElementById('hasJoinedCase').checked;
+  const sameAs = document.getElementById('prosecutorJoinedSameAsReq');
+  const joinedInput = document.getElementById('prosecutorNameJoined');
+  sameAs.disabled = !hasJoined;
+  if(!hasJoined){
+    sameAs.checked = false;
+    joinedInput.disabled = true;
+  } else {
+    joinedInput.disabled = sameAs.checked;
+    if(sameAs.checked){
+      joinedInput.value = document.getElementById('prosecutorNameReq').value;
+    }
+  }
+}
+document.getElementById('hasJoinedCase').addEventListener('change', syncProsecutorJoinedField);
+document.getElementById('prosecutorJoinedSameAsReq').addEventListener('change', syncProsecutorJoinedField);
+document.getElementById('prosecutorNameReq').addEventListener('input', ()=>{
+  if(document.getElementById('prosecutorJoinedSameAsReq').checked){
+    document.getElementById('prosecutorNameJoined').value = document.getElementById('prosecutorNameReq').value;
+  }
+});
 ['reqCaseZi','joinedCaseZi'].forEach(id=>{
   const sel = document.getElementById(id);
   const other = document.getElementById(id + 'Other');
@@ -882,14 +1103,133 @@ bindToggle('#hasJoinedCase', 'hasJoinedCase_box');
 });
 bindToggle('#hasProbation', 'hasProbation_box');
 bindToggle('#hasCondition', 'hasCondition_box');
+bindToggle('#hasEducationCondition', 'hasEducationCondition_box');
 bindToggle('#hasFineInVerdict', 'hasFineInVerdict_box');
+bindToggle('#juvenile112', 'juvenile112_box');
 bindToggle('#jointPrincipal', 'jointPrincipal_box');
 ['advLegalChange','advPrepAttempt','advAbsorption','advContinuous','advOngoing','advChangeCharge','advProsecutorError'].forEach(id=>{
   bindToggle('#'+id, id+'_box');
 });
+function syncDisposalLaw300Lock(){
+  const changeChargeChecked = document.getElementById('advChangeCharge').checked;
+  const cb300 = document.getElementById('disposalLaw300');
+  const row = document.getElementById('disposalLaw300Row');
+  const hint = document.getElementById('disposalLaw300LockHint');
+  if(!cb300 || !row || !hint) return;
+  if(changeChargeChecked){
+    cb300.checked = true;
+    cb300.disabled = true;
+    row.style.background = 'rgba(211,148,92,0.18)';
+    row.style.border = '1px solid var(--accent)';
+    row.style.borderRadius = '4px';
+    row.style.padding = '6px 8px';
+    hint.style.display = 'block';
+    hint.style.color = 'var(--accent)';
+    hint.style.fontWeight = '700';
+    hint.textContent = '🔒 已鎖定：因您於「進階論罪事項」勾選「變更起訴法條」，此處第300條須一併勾選，以確保理由與據上論斷前後一致，如需取消請先取消「變更起訴法條」。';
+  } else {
+    cb300.disabled = false;
+    row.style.background = '';
+    row.style.border = '';
+    row.style.borderRadius = '';
+    row.style.padding = '';
+    hint.style.display = 'none';
+  }
+}
+document.getElementById('advChangeCharge').addEventListener('change', syncDisposalLaw300Lock);
+
+function hasForfeitContent(){
+  const blocks = [...document.querySelectorAll('#forfeitItems .repeat-block')];
+  return blocks.some(b=>{
+    const desc = b.querySelector('.forf-desc').value.trim();
+    const custom = b.querySelector('.forf-custom') ? b.querySelector('.forf-custom').value.trim() : '';
+    return !!(desc || custom);
+  });
+}
+
+function updateMainPenaltyTypeAvailability(){
+  const sel = getSelectedMainCrime();
+  const radios = {
+    custody: document.querySelector('.mainPenaltyType[value="custody"]'),
+    detention: document.querySelector('.mainPenaltyType[value="detention"]'),
+    fineOnly: document.querySelector('.mainPenaltyType[value="fineOnly"]')
+  };
+  const hint = document.getElementById('mainPenaltyTypeHint');
+  if(!sel){
+    // 尚未選定主要罪名：不限制，三者皆可選
+    Object.values(radios).forEach(r=>{ if(r) r.disabled = false; });
+    if(hint) hint.textContent = '';
+    return;
+  }
+  const allowed = allowedPenaltyTypes[sel.key] || ['custody','detention','fineOnly'];
+  let disabledNames = [];
+  Object.keys(radios).forEach(type=>{
+    const r = radios[type];
+    if(!r) return;
+    const isAllowed = allowed.includes(type);
+    r.disabled = !isAllowed;
+    if(!isAllowed){
+      const typeLabel = type==='custody' ? '有期徒刑' : (type==='detention' ? '拘役' : '罰金');
+      disabledNames.push(typeLabel);
+      if(r.checked){
+        // 目前選取的類型已不合法，自動切回「有期徒刑」（恆定允許）
+        r.checked = false;
+        if(radios.custody){ radios.custody.checked = true; radios.custody.disabled = false; }
+      }
+    }
+  });
+  if(hint){
+    hint.textContent = disabledNames.length ? `「${sel.data.label}」依現行法不得科處：${disabledNames.join('、')}，已自動限制上方選項。` : '';
+  }
+}
+
+function syncFineInVerdictLock(){
+  const isFineOnly = document.querySelector('.mainPenaltyType[value="fineOnly"]').checked;
+  const cb = document.getElementById('hasFineInVerdict');
+  const hint = document.getElementById('fineLockHint');
+  if(!cb || !hint) return;
+  if(isFineOnly){
+    cb.checked = false;
+    cb.disabled = true;
+    hint.style.display = 'block';
+    hint.style.color = '#ff5555';
+    hint.style.fontWeight = '700';
+    hint.textContent = '主刑已選擇「罰金」，不得再併科罰金，此選項已鎖定。';
+  } else {
+    cb.disabled = false;
+    hint.style.display = 'none';
+  }
+  syncToggleBox('hasFineInVerdict_box', cb.checked);
+}
+
+function syncDisposalLaw450Lock(){
+  const cb450 = document.getElementById('disposalLaw450_1');
+  const row = document.getElementById('disposalLaw450_1Row');
+  const hint = document.getElementById('disposalLaw450_1LockHint');
+  if(!cb450 || !row || !hint) return;
+  if(hasForfeitContent()){
+    cb450.checked = true;
+    cb450.disabled = true;
+    row.style.background = 'rgba(211,148,92,0.18)';
+    row.style.border = '1px solid var(--accent)';
+    row.style.borderRadius = '4px';
+    row.style.padding = '6px 8px';
+    hint.style.display = 'block';
+    hint.style.color = 'var(--accent)';
+    hint.style.fontWeight = '700';
+    hint.textContent = '🔒 已鎖定：因您於「沒收／追徵」欄已填寫內容，此處第450條第1項須一併勾選，以確保沒收部分之說明與據上論斷前後一致，如需取消請先清空「沒收／追徵」欄之內容。';
+  } else {
+    cb450.disabled = false;
+    row.style.background = '';
+    row.style.border = '';
+    row.style.borderRadius = '';
+    row.style.padding = '';
+    hint.style.display = 'none';
+  }
+}
 document.querySelectorAll('input[name="confession"]').forEach(el=>{
   el.addEventListener('change', ()=>{
-    document.getElementById('confession_yes_box').classList.toggle('show', document.querySelector('input[name="confession"]:checked').value === 'yes');
+    document.getElementById('confession_yes_box').classList.toggle('show', getConfessionValue() === 'yes');
     render();
   });
 });
@@ -902,7 +1242,9 @@ document.querySelectorAll('.probSupervision').forEach(el=>{
 });
 document.querySelectorAll('input[name="concursus"]').forEach(el=>{
   el.addEventListener('change', ()=>{
-    document.getElementById('concursus_imagine_box').classList.toggle('show', document.querySelector('input[name="concursus"]:checked').value === 'imagine');
+    const mode = getConcursusMode();
+    document.getElementById('concursus_imagine_box').classList.toggle('show', mode === 'imagine');
+    document.getElementById('concursus_separate_box').classList.toggle('show', mode === 'separate');
     render();
   });
 });
@@ -929,22 +1271,35 @@ const crimeText = {
   mlAttempt: '刑法第30條第1項前段、洗錢防制法第19條第2項、第1項之幫助洗錢未遂罪',
   theft: '刑法第320條第1項竊盜罪',
   theftAgg: '刑法第321條第1項加重竊盜罪',
-  duiAlcohol: '刑法第185條之3第1項第1款、第2款不能安全駕駛罪',
+  duiAlcohol: '刑法第185條之3第1項第1款、第2款之駕駛動力交通工具而吐氣所含酒精濃度達每公升零點二五毫克以上不能安全駕駛罪',
   duiDrug: '刑法第185條之3第1項第3款不能安全駕駛罪',
   bankAccountProvide: '洗錢防制法第22條第3項第2款之無正當理由交付、提供合計3個以上金融帳戶予他人使用罪'
 };
 
 // 法定刑資料（月為單位；fineType: mandatory=應併科／optional=得併科／alternative=得選科，非併科）
 const crimeData = {
-  fraud:      {label:'幫助詐欺取財罪',       min:0,  max:60, fineType:'alternative', fineMax:'50萬元'},
+  fraud:      {label:'幫助詐欺取財罪',       min:2,  max:60, fineType:'alternative', fineMax:'50萬元'},
   fraudAgg:   {label:'幫助加重詐欺取財罪',   min:12, max:84, fineType:'optional',    fineMax:'100萬元'},
   ml:         {label:'幫助洗錢罪（既遂）',   min:6,  max:60, fineType:'mandatory',   fineMax:'5,000萬元'},
   mlAttempt:  {label:'幫助洗錢未遂罪',       min:6,  max:60, fineType:'mandatory',   fineMax:'5,000萬元'},
-  theft:      {label:'竊盜罪',               min:0,  max:60, fineType:'alternative', fineMax:'50萬元'},
+  theft:      {label:'竊盜罪',               min:2,  max:60, fineType:'alternative', fineMax:'50萬元'},
   theftAgg:   {label:'加重竊盜罪',           min:6,  max:60, fineType:'optional',    fineMax:'50萬元'},
-  duiAlcohol: {label:'不能安全駕駛罪（酒精）',min:0, max:36, fineType:'optional',    fineMax:'30萬元'},
-  duiDrug:    {label:'不能安全駕駛罪（毒品）',min:0, max:36, fineType:'optional',    fineMax:'30萬元'},
-  bankAccountProvide: {label:'無正當理由交付、提供合計3個以上金融帳戶予他人使用罪', min:0, max:36, fineType:'alternative', fineMax:'100萬元'}
+  duiAlcohol: {label:'不能安全駕駛罪（酒精）',min:2, max:36, fineType:'optional',    fineMax:'30萬元'},
+  duiDrug:    {label:'不能安全駕駛罪（毒品）',min:2, max:36, fineType:'optional',    fineMax:'30萬元'},
+  bankAccountProvide: {label:'無正當理由交付、提供合計3個以上金融帳戶予他人使用罪', min:2, max:36, fineType:'alternative', fineMax:'100萬元'}
+};
+
+// 各罪名依現行法所允許之主刑類型（有期徒刑恆定允許；拘役、罰金（作為主刑）僅於法條明文「或拘役」「或罰金」時才允許）
+const allowedPenaltyTypes = {
+  fraud: ['custody','detention','fineOnly'],             // 339條1項：5年以下有期徒刑、拘役或科或併科50萬元以下罰金
+  fraudAgg: ['custody'],                                   // 339條之4：1年以上7年以下有期徒刑（下限逾拘役／罰金可能範圍）
+  ml: ['custody'],                                         // 洗錢防制法19條1項後段：6月以上5年以下有期徒刑，併科罰金
+  mlAttempt: ['custody'],
+  theft: ['custody','detention','fineOnly'],               // 320條1項：5年以下有期徒刑、拘役或50萬元以下罰金
+  theftAgg: ['custody'],                                   // 321條1項：6月以上5年以下有期徒刑
+  duiAlcohol: ['custody'],                                 // 185條之3第1項：3年以下有期徒刑，得併科罰金（無拘役、無單獨罰金選項）
+  duiDrug: ['custody'],
+  bankAccountProvide: ['custody','detention','fineOnly']   // 洗錢防制法22條3項：3年以下有期徒刑、拘役或科或併科100萬元以下罰金
 };
 
 const fineTypeText = {
@@ -961,7 +1316,7 @@ const verdictCrimeLabel = {
   mlAttempt: '洗錢防制法第19條第1項後段、第2項之洗錢未遂罪',
   theft: '刑法第320條第1項之竊盜罪',
   theftAgg: '刑法第321條第1項之加重竊盜罪',
-  duiAlcohol: '刑法第185條之3第1項第1款、第2款之不能安全駕駛罪',
+  duiAlcohol: '駕駛動力交通工具而吐氣所含酒精濃度達每公升零點二五毫克以上罪',
   duiDrug: '刑法第185條之3第1項第3款之不能安全駕駛罪',
   bankAccountProvide: '洗錢防制法第22條第3項第2款之無正當理由交付、提供合計3個以上金融帳戶予他人使用罪'
 };
@@ -973,9 +1328,22 @@ const crimeVerb = {
   bankAccountProvide: '犯'
 };
 
+// 罪名簡稱（不含法條字號），供兒少法112條「成年人與少年共同犯＿＿罪」句型使用
+const crimeBareLabel = {
+  fraud: '詐欺取財罪',
+  fraudAgg: '加重詐欺取財罪',
+  ml: '洗錢罪',
+  mlAttempt: '洗錢未遂罪',
+  theft: '竊盜罪',
+  theftAgg: '加重竊盜罪',
+  duiAlcohol: '不能安全駕駛罪',
+  duiDrug: '不能安全駕駛罪',
+  bankAccountProvide: '無正當理由交付、提供合計3個以上金融帳戶予他人使用罪'
+};
+
 function monthsToText(m){
   m = Math.round(m);
-  if(m<=0) return '拘役或罰金（未達1月，僅供參考，實務多以拘役／罰金或最低刑度處理）';
+  if(m<=0) return '未達1月（僅供參考，實務上會依個案調整至最低可宣告之刑度，並非當然可易科拘役或罰金）';
   const y = Math.floor(m/12);
   const mm = m%12;
   let s = '';
@@ -990,7 +1358,12 @@ function refreshHeavierCrimeOptions(){
   const current = sel.value;
   const checked = [...document.querySelectorAll('.crimeChk:checked')].map(c=>c.value).filter(v=>v!=='custom');
   sel.innerHTML = '<option value="">（不試算）</option>' + checked.map(k=>`<option value="${k}">${crimeData[k]?crimeData[k].label:k}</option>`).join('');
-  if(checked.includes(current)) sel.value = current;
+  if(checked.includes(current)){
+    sel.value = current;
+  } else if(checked.length > 0){
+    // 預設自動帶入已勾選罪名中的第一個，避免使用者忘記選擇導致主文無法生成
+    sel.value = checked[0];
+  }
 }
 
 function buildCrimeParagraph(){
@@ -1023,6 +1396,27 @@ function buildAdvParagraph(checkboxId, textareaId){
   return t ? [t] : [];
 }
 
+function buildChangeChargeParagraph(){
+  const cb = document.getElementById('advChangeCharge');
+  if(!cb || !cb.checked) return [];
+  const from = document.getElementById('advChangeChargeFrom').value.trim() || '＿＿＿';
+  const reason = document.getElementById('advChangeChargeReason').value.trim() || '＿＿＿';
+  const to = document.getElementById('advChangeChargeTo').value.trim() || '＿＿＿';
+  return [`公訴意旨雖認被告係犯${from}罪，惟${reason}，爰依刑事訴訟法第300條規定變更起訴法條，變更為${to}。`];
+}
+
+function buildAbsorptionParagraph(){
+  const cb = document.getElementById('advAbsorption');
+  if(!cb || !cb.checked) return [];
+  const low = document.getElementById('advAbsorptionLow').value.trim() || '＿＿＿';
+  const high = document.getElementById('advAbsorptionHigh').value.trim() || '＿＿＿';
+  const multiple = document.getElementById('advAbsorptionMultiple').checked;
+  if(multiple){
+    return [`被告${low}之低度行為，均為其${high}之高度行為所吸收，均不另論罪。`];
+  }
+  return [`被告${low}之低度行為為${high}之高度行為所吸收，不另論罪。`];
+}
+
 function buildJointHelperParagraphs(){
   let out = [];
   if(document.getElementById('jointPrincipal').checked){
@@ -1036,7 +1430,7 @@ function buildJointHelperParagraphs(){
 }
 
 function buildConcursusTheoryParagraphs(){
-  const mode = document.querySelector('input[name="concursus"]:checked').value;
+  const mode = getConcursusMode();
   let out = [];
   if(mode === 'imagine'){
     const heavier = document.getElementById('heavierCrime').value.trim() || '一重罪';
@@ -1059,8 +1453,21 @@ function buildJoinedCaseParagraph(){
   return [`${no}移送併辦意旨書，與本案聲請簡易判決處刑部分，有想像競合犯之裁判上一罪關係，本院自得併予審理。`];
 }
 
+function getJuvenile112Type(){
+  const el = document.querySelector('input[name="juvenile112Type"]:checked');
+  return el ? el.value : 'coOffend';
+}
+
 function buildAggravatingParagraphs(){
   let out = [];
+  if(document.getElementById('juvenile112').checked){
+    const alias = document.getElementById('juvenile112Alias').value.trim() || '＿＿＿';
+    if(getJuvenile112Type() === 'intentional'){
+      out.push(`被告故意對少年${alias}犯本罪，核屬故意對兒童及少年犯罪，爰依兒童及少年福利與權益保障法第112條第1項前段規定，加重其刑至二分之一。`);
+    } else {
+      out.push(`被告自承於本案行為時已知悉${alias}為12歲以上未滿18歲之少年在卷，爰依兒童及少年福利與權益保障法第112條第1項前段規定，加重其刑。`);
+    }
+  }
   if(document.getElementById('recidivist').checked){
     out.push('被告構成累犯，爰依刑法第47條第1項規定，加重其刑。');
   }
@@ -1069,7 +1476,7 @@ function buildAggravatingParagraphs(){
 
 function buildReducingParagraphs(){
   let paras = [];
-  const confession = document.querySelector('input[name="confession"]:checked').value;
+  const confession = getConfessionValue();
   let reductionCount = 0;
   if(confession === 'yes'){
     if(document.getElementById('extendedConfessionReason').checked){
@@ -1078,9 +1485,10 @@ function buildReducingParagraphs(){
       paras.push('被告於偵查中已自白犯行，爰依洗錢防制法第23條第3項前段規定，減輕其刑。');
     }
     reductionCount++;
-  } else {
+  } else if(confession === 'none'){
     paras.push('被告於偵查中固坦承提供帳戶，然否認有何幫助詐欺、洗錢之犯意，難認已合於自白之要件，自無從依洗錢防制法第23條第3項前段規定，減輕其刑。');
   }
+  // confession 為空字串（尚未勾選）：不生成本段
   if(document.getElementById('helperReduce').checked){
     paras.push('被告為幫助犯，爰依刑法第30條第2項規定，按正犯之刑減輕之。');
     reductionCount++;
@@ -1116,7 +1524,14 @@ function buildSentencingParagraph(){
   }
   const customLines = document.getElementById('sentFactorCustom').value.split('\n').map(s=>s.trim()).filter(Boolean);
   parts = parts.concat(customLines);
-  return '爰以行為人之責任為基礎，審酌卷內關於刑法第57條各項量刑因子之證據資料，' + (parts.length? parts.join('；') + '等一切情狀' : '被告之品行、犯罪動機、目的、手段、生活狀況、智識程度及犯罪後態度等一切情狀') + '，量處如主文所示之刑，並諭知易科罰金、易服勞役之折算標準。';
+  const mode = getConcursusMode();
+  const verbPhrase = mode === 'separate' ? '分別量處如主文所示之刑' : '量處如主文所示之刑';
+  let out = '爰以行為人之責任為基礎，審酌卷內關於刑法第57條各項量刑因子之證據資料，' + (parts.length? parts.join('；') + '等一切情狀' : '被告之品行、犯罪動機、目的、手段、生活狀況、智識程度及犯罪後態度等一切情狀') + '，' + verbPhrase + '，並諭知易科罰金、易服勞役之折算標準。';
+
+  if(mode === 'separate' && document.getElementById('separateProportionality').checked){
+    out += ' 本院再依罪責相當之比例原則及多數犯罪責任遞減原則，審酌被告各次犯行之犯罪時間、侵害法益等犯罪情節，暨各罪所生損害、反應出之人格特性、刑罰加重效益及整體犯罪非難評價，合併定其應執行刑如主文所示，並諭知如易科罰金之折算標準。';
+  }
+  return out;
 }
 
 function buildProbationParagraph(){
@@ -1127,16 +1542,31 @@ function buildProbationParagraph(){
   if(document.getElementById('probBasis2').checked) basis.push('第2款');
   const basisText = basis.length ? `刑法第74條第1項${basis.join('、')}之規定` : '刑法第74條第1項之規定';
   let out = `本院審酌上情，認被告經此偵審程序及科刑宣告之教訓後，當知警惕而無再犯之虞，其所受宣告之刑以暫不執行為適當，爰依${basisText}，併予宣告緩刑${years}年。`;
-  if(document.getElementById('hasCondition').checked){
-    const items = [...document.querySelectorAll('#conditionItems .repeat-block')].map(b=>{
-      const name = b.querySelector('.cond-name').value.trim();
-      const method = b.querySelector('.cond-method').value.trim();
-      return method || (name ? `應賠償告訴人${name}` : '');
-    }).filter(Boolean);
-    if(items.length){
+
+  const hasMoneyCondition = document.getElementById('hasCondition').checked;
+  const hasEduCondition = document.getElementById('hasEducationCondition').checked;
+  const moneyItems = hasMoneyCondition ? [...document.querySelectorAll('#conditionItems .repeat-block')].map(b=>{
+    const name = b.querySelector('.cond-name').value.trim();
+    const method = b.querySelector('.cond-method').value.trim();
+    return method || (name ? `應賠償告訴人${name}` : '');
+  }).filter(Boolean) : [];
+
+  if(moneyItems.length || hasEduCondition){
+    let clauseParts = [];
+    if(moneyItems.length){
       const months = document.getElementById('conditionDeadlineMonths').value.trim() || '＿＿';
-      out += ` 又慮及告訴人權益之保障，認於被告緩刑期間課予損害賠償負擔為適當，爰參考雙方和解之條件，依刑法第74條第2項第3款之規定，併予宣告被告應自本判決確定之日起${months}月內，依附表所示條件賠償告訴人，期能使被告明瞭其行為所造成之危害，以惕勵其行止，用啟自新。`;
+      clauseParts.push(`應自本判決確定之日起${months}月內，依附表所示條件賠償告訴人`);
     }
+    if(hasEduCondition){
+      const content = document.getElementById('educationContent').value.trim() || '法治教育';
+      const sessions = document.getElementById('educationSessions').value.trim() || '＿＿';
+      const eduMonths = document.getElementById('educationDeadlineMonths').value.trim() || '＿＿';
+      clauseParts.push(`應自本判決確定之日起${eduMonths}月內，接受${content}${sessions}場次`);
+    }
+    const basisNos = [];
+    if(moneyItems.length) basisNos.push('第3款');
+    if(hasEduCondition) basisNos.push('第8款');
+    out += ` 又慮及告訴人權益之保障及被告法治觀念之強化，認於被告緩刑期間課予相關負擔為適當，爰依刑法第74條第2項${basisNos.join('、')}之規定，併予宣告被告${clauseParts.join('，並')}，期能使被告明瞭其行為所造成之危害，以惕勵其行止，用啟自新。`;
   }
   if(document.getElementById('probRevokeClause').checked){
     out += ` 如被告未履行上開負擔且情節重大，足認此次宣告之緩刑難收其預期效果，而有執行刑罰之必要者，依刑法第75條之1第1項第4款之規定，仍得由檢察官聲請撤銷其緩刑宣告，附此敘明。`;
@@ -1189,7 +1619,9 @@ function buildForfeitureParagraph(){
   const marks = ['㈠','㈡','㈢','㈣','㈤','㈥'];
   const lines = blocks.map((b,i)=>{
     const type = b.querySelector('.forf-type').value;
-    const desc = b.querySelector('.forf-desc').value.trim();
+    const rawDesc = b.querySelector('.forf-desc').value.trim();
+    const seized = b.querySelector('.forf-seized').checked;
+    const desc = (seized && rawDesc) ? `本案扣得如${rawDesc}` : rawDesc;
     let text = '';
     if(type==='refunded'){
       text = `${desc || '相關款項'}業經金融機構全數發還予被害人，爰不予宣告沒收或追徵。`;
@@ -1203,6 +1635,14 @@ function buildForfeitureParagraph(){
       text = `${desc ? desc+'，' : ''}查無證據證明被告因本案犯行獲有任何犯罪所得，爰不予宣告沒收、追徵。`;
     } else if(type==='lowValue'){
       text = `${desc || '相關物品'}價值輕微，縱屬供犯罪所用或所得之物，惟衡諸其經濟價值與國家執行沒收所需耗費之成本、勞費顯不相當，認欠缺刑法上沒收之重要性，爰依刑法第38條之2第2項規定，不予宣告沒收、追徵。`;
+    } else if(type==='jointForfeit'){
+      const jointName = b.querySelector('.forf-joint-name').value.trim() || '＿＿＿';
+      text = `${desc || '相關犯罪所得'}為被告與${jointName}之犯罪所得，依卷內事證復查無上開犯罪所得有無分配或各人分得之數為何，因認被告與${jointName}就上開犯罪所得有共同處分權限，應依刑法第38條之1第1項前段、第3項規定宣告共同沒收，於全部或一部不能沒收或不宜執行沒收時，追徵其價額。`;
+    } else if(type==='returnedToVictim'){
+      const victim = b.querySelector('.forf-return-victim').value.trim() || '＿＿＿';
+      text = `${desc || '相關物品'}業據扣案並發還告訴人${victim}具領，依刑法第38條之1第5項規定，不予宣告沒收或追徵。`;
+    } else if(type==='forgedSeal219'){
+      text = `按偽造之印章、印文或署押，不問屬於犯人與否，沒收之，刑法第219條定有明文。經查，${desc || '被告偽造之印章、印文或署押'}核屬偽造之印章、印文或署押，不問是否屬於被告所有，均應依上開規定義務宣告沒收。`;
     } else if(type==='forfeit'){
       text = `${desc || '相關財物'}係被告因本案犯罪所得或供犯罪所用之物，爰依刑法第38條之1第1項（或第38條）規定宣告沒收，如全部或一部不能沒收或不宜執行沒收時，追徵其價額。`;
     } else {
@@ -1238,7 +1678,7 @@ function getCrimeLawTexts(key){
 function updateHeavyCrimeLawText(){
   const box = document.getElementById('heavyCrimeLawText');
   if(!box) return;
-  const mode = document.querySelector('input[name="concursus"]:checked').value;
+  const mode = getConcursusMode();
   if(mode === 'separate'){
     box.textContent = '（數罪併罰模式：請分別核對各罪法條，本欄僅於單純一罪／想像競合模式下顯示所論罪名之法條全文）';
     return;
@@ -1275,8 +1715,20 @@ function buildAppendixLaws(){
   if(probChecked.includes('juv82')){
     laws.push({t:'少年事件處理法第82條第1項', c:'少年在緩刑或假釋期中應付保護管束。'});
   }
+  if(document.getElementById('juvenile112') && document.getElementById('juvenile112').checked){
+    laws.push({t:'兒童及少年福利與權益保障法第112條第1項', c:'成年人教唆、幫助或利用兒童及少年犯罪或與之共同實施犯罪或故意對其犯罪者，加重其刑至二分之一。但各該罪就被害人係兒童及少年已定有特別處罰規定者，從其規定。'});
+  }
   if(laws.length===0) return '（依所選罪名自動列出附錄法條，目前尚未勾選罪名）';
   return laws.map(l=>l.t+'\n'+l.c).join('\n');
+}
+
+function getConcursusMode(){
+  const el = document.querySelector('input[name="concursus"]:checked');
+  return el ? el.value : '';
+}
+function getConfessionValue(){
+  const el = document.querySelector('input[name="confession"]:checked');
+  return el ? el.value : '';
 }
 
 function formatCaseNo(yearId, ziId, numId){
@@ -1298,7 +1750,9 @@ function buildCauseParagraph(){
   const violation = document.getElementById('causeHasViolation').checked ? '違反' : '';
   const cause = `${violation}${name}案件`;
   const reqNo = formatCaseNo('reqCaseYear','reqCaseZi','reqCaseNum');
-  let out = `上列被告因${cause}，經檢察官聲請以簡易判決處刑（${reqNo}）`;
+  const defendants = getDefendantNames();
+  const subject = defendants.length >= 2 ? '上列被告等' : '上列被告';
+  let out = `${subject}因${cause}，經檢察官聲請以簡易判決處刑（${reqNo}）`;
   if(document.getElementById('hasJoinedCase').checked){
     const joinedNo = formatCaseNo('joinedCaseYear','joinedCaseZi','joinedCaseNum');
     out += `及移送併辦（${joinedNo}）`;
@@ -1370,15 +1824,16 @@ function buildMilitaryParagraph(){
 function computeRangeFor(key){
   const base = crimeData[key];
   if(!base) return null;
-  let min = base.min, max = base.max;
-  const legalMaxOriginal = base.max; // 未經個案加減之法定最高本刑，供刑法41條判斷用
+  const adjustedLegalMax = getAdjustedLegalMax(key); // 若為兒少法112條分則加重，已於此反映×1.5
+  let min = base.min, max = adjustedLegalMax;
+  const legalMaxOriginal = adjustedLegalMax; // 未經個案加減（但已計入112條分則加重）之法定最高本刑，供刑法41條判斷用
 
   if(document.getElementById('recidivist').checked){
     min *= 1.5; max *= 1.5;
   }
   const reductions = [];
   if(document.getElementById('helperReduce').checked) reductions.push('幫助犯（刑法第30條第2項）');
-  if(document.querySelector('input[name="confession"]:checked').value === 'yes') reductions.push('自白（洗錢防制法第23條第3項）');
+  if(getConfessionValue() === 'yes') reductions.push('自白（洗錢防制法第23條第3項）');
   if(document.getElementById('surrender').checked) reductions.push('自首（刑法第62條）');
   reductions.forEach(()=>{ min /= 2; max /= 2; });
 
@@ -1387,12 +1842,17 @@ function computeRangeFor(key){
 
 // ---------- verdict (主文) builder ----------
 function buildVerdictParagraph(){
-  const name = document.getElementById('defendantFullName').value.trim() || '被告';
-  const monthsRaw = document.getElementById('mainPenaltyMonths').value.trim();
-  if(!monthsRaw) return '（請於「主文量刑」填寫主刑月數以自動生成主文）';
-  const monthsDisplay = formatVerdictCount(monthsRaw) + '月';
+  const defendants = getDefendantNames();
+  const name = defendants.length ? defendants.join('、') : '被告';
 
-  const mode = document.querySelector('input[name="concursus"]:checked').value;
+  const useCustody = document.querySelector('.mainPenaltyType[value="custody"]').checked;
+  const useDetention = document.querySelector('.mainPenaltyType[value="detention"]').checked;
+  const useFineOnly = document.querySelector('.mainPenaltyType[value="fineOnly"]').checked;
+  if(!useCustody && !useDetention && !useFineOnly){
+    return '（請於「主文量刑」勾選至少一種主刑類型：有期徒刑／拘役／罰金）';
+  }
+
+  const mode = getConcursusMode();
   let crimeLabel = '';
   let key = '';
   if(mode === 'imagine' || mode === 'single'){
@@ -1404,7 +1864,36 @@ function buildVerdictParagraph(){
   }
   const verb = crimeVerb[key] || '犯';
 
-  let out = `${name}${verb}${crimeLabel}，處有期徒刑${monthsDisplay}`;
+  // 兒少法112條第1項：主文罪名依總則加重／分則加重分別呈現
+  const isJuvenile112 = document.getElementById('juvenile112').checked;
+  let crimePhrase;
+  if(isJuvenile112 && crimeBareLabel[key]){
+    crimePhrase = getJuvenile112Type() === 'intentional'
+      ? `成年人故意對少年犯${crimeBareLabel[key]}`
+      : `成年人與少年共同犯${crimeBareLabel[key]}`;
+  } else {
+    crimePhrase = `${verb}${crimeLabel}`;
+  }
+
+  let penaltyParts = [];
+  if(useCustody){
+    const monthsRaw = document.getElementById('mainPenaltyMonths').value.trim();
+    if(monthsRaw) penaltyParts.push(`有期徒刑${formatVerdictCount(monthsRaw)}月`);
+  }
+  if(useDetention){
+    const daysRaw = document.getElementById('mainPenaltyDetentionDays').value.trim();
+    if(daysRaw) penaltyParts.push(`拘役${formatVerdictCount(daysRaw)}日`);
+  }
+  if(useFineOnly){
+    const fineOnlyRaw = document.getElementById('mainPenaltyFineOnly').value.trim();
+    const fineOnlyDisplay = formatVerdictAmount(fineOnlyRaw);
+    if(fineOnlyDisplay) penaltyParts.push(`罰金新臺幣${fineOnlyDisplay}`);
+  }
+  if(penaltyParts.length===0){
+    return '（請填寫已勾選主刑類型之對應數值）';
+  }
+
+  let out = `${name}${crimePhrase}，處${penaltyParts.join('、')}`;
 
   const hasFine = document.getElementById('hasFineInVerdict').checked;
   const fineRaw = document.getElementById('fineAmount').value.trim();
@@ -1412,29 +1901,54 @@ function buildVerdictParagraph(){
   if(hasFine && fineDisplay){
     out += `，併科罰金新臺幣${fineDisplay}`;
   }
-  out += '，有期徒刑如易科罰金';
-  if(hasFine && fineDisplay) out += '，罰金如易服勞役';
 
-  const rateRaw = document.querySelector('input[name="commuteRateChoice"]:checked').value;
-  const rateDisplay = formatVerdictAmount(rateRaw);
-  if(rateDisplay){
-    out += `，均以新臺幣${rateDisplay}折算1日`;
+  // 易科罰金／易服勞役文字：僅於主刑含有期徒刑或拘役、且使用者勾選顯示時才產生
+  if((useCustody || useDetention) && document.getElementById('showCommuteInVerdict').checked){
+    const ineligible = isCommuteIneligible();
+    let commuteClauseParts = [];
+    // 僅有單一主刑類型時，依常見寫法省略類型前綴（如「拘役50日，如易科罰金」）；
+    // 有期徒刑仍保留「有期徒刑如易科罰金」之慣用寫法。
+    if(useCustody && useDetention){
+      commuteClauseParts.push('有期徒刑及拘役如易科罰金');
+    } else if(useCustody){
+      commuteClauseParts.push('有期徒刑如易科罰金');
+    } else if(useDetention){
+      commuteClauseParts.push('如易科罰金');
+    }
+    let commuteClause = `，${commuteClauseParts.join('，')}`;
+    if(hasFine && fineDisplay) commuteClause += '，罰金如易服勞役';
+
+    const rateEl = document.querySelector('input[name="commuteRateChoice"]:checked');
+    if(rateEl){
+      const rateDisplay = formatVerdictAmount(rateEl.value);
+      if(rateDisplay){
+        // 若同時有主刑折算與罰金易服勞役兩種折算對象，用「均以」；僅一種則用「以」
+        const multipleTargets = (useCustody || useDetention) && hasFine && fineDisplay;
+        commuteClause += `，${multipleTargets ? '均以' : ''}新臺幣${rateDisplay}折算1日`;
+      }
+    }
+    out += ineligible ? (RED_START + commuteClause + RED_END) : commuteClause;
   }
   out += '。';
 
   if(document.getElementById('hasProbation').checked){
     const years = document.getElementById('probationYears').value.trim() || '3';
     out += `緩刑${formatVerdictCount(years)}年`;
+    const probChecked = [...document.querySelectorAll('.probSupervision:checked')];
+    if(probChecked.length){
+      out += '，緩刑期間付保護管束';
+    }
     if(document.getElementById('hasCondition').checked){
       const items = [...document.querySelectorAll('#conditionItems .repeat-block')];
       if(items.length){
-        const deadlineMonths = document.getElementById('conditionDeadlineMonths').value.trim() || '＿＿';
-        out += `，並應自本判決確定之日起${formatVerdictCount(deadlineMonths)}月內履行如附表所示條件`;
+        out += `，並應按如附表所示之內容履行`;
       }
     }
-    const probChecked = [...document.querySelectorAll('.probSupervision:checked')];
-    if(probChecked.length){
-      out += '，並於緩刑期間付保護管束';
+    if(document.getElementById('hasEducationCondition').checked){
+      const content = document.getElementById('educationContent').value.trim() || '法治教育';
+      const sessions = document.getElementById('educationSessions').value.trim() || '＿＿';
+      const eduMonths = document.getElementById('educationDeadlineMonths').value.trim() || '＿＿';
+      out += `，且應自本判決確定之日起${formatVerdictCount(eduMonths)}月內，接受${content}${formatVerdictCount(sessions)}場次`;
     }
     out += '。';
   }
@@ -1447,20 +1961,110 @@ function updateVerdictPreview(){
   if(box) box.textContent = buildVerdictParagraph();
 }
 
+// 兒少法112條第1項「故意對其犯罪」屬分則加重，視為獨立罪名，法定本刑提高至1.5倍；
+// 「教唆、幫助、利用、共同實施」則屬總則加重，不改變法定本刑。
+function getAdjustedLegalMax(key){
+  if(!crimeData[key]) return null;
+  let max = crimeData[key].max;
+  const juvenileEl = document.getElementById('juvenile112');
+  if(juvenileEl && juvenileEl.checked && getJuvenile112Type() === 'intentional'){
+    max = max * 1.5;
+  }
+  return max;
+}
+
 function getSelectedMainCrime(){
-  const mode = document.querySelector('input[name="concursus"]:checked').value;
+  const mode = getConcursusMode();
   if(mode !== 'imagine' && mode !== 'single') return null;
   const key = document.getElementById('heavierCrimeKey') ? document.getElementById('heavierCrimeKey').value : '';
-  return crimeData[key] ? {key, data: crimeData[key]} : null;
+  if(!crimeData[key]) return null;
+  const adjustedMax = getAdjustedLegalMax(key);
+  // data 為調整後之複本，min/fineType/fineMax/label 沿用原罪名資料，max 則反映112條分則加重後之結果
+  return {key, data: Object.assign({}, crimeData[key], {max: adjustedMax})};
+}
+
+function updateProbationEligibility(){
+  const hint = document.getElementById('probationEligibilityHint');
+  if(!hint) return;
+  if(!document.getElementById('hasProbation').checked){
+    hint.textContent = '';
+    hint.style.color = '';
+    return;
+  }
+
+  const useCustody = document.querySelector('.mainPenaltyType[value="custody"]').checked;
+  const useDetention = document.querySelector('.mainPenaltyType[value="detention"]').checked;
+  const useFineOnly = document.querySelector('.mainPenaltyType[value="fineOnly"]').checked;
+  const monthsRaw = parseInt(document.getElementById('mainPenaltyMonths').value, 10) || 0;
+
+  let issues = [];      // 硬性阻卻事由（法律上原則不得宣告緩刑）
+  let advisories = [];  // 軟性提醒（不當然阻卻，但可能影響法院是否「認以暫不執行為適當」之裁量）
+
+  // 刑法74條第1項本文：受2年以下有期徒刑、拘役或罰金之宣告，始得宣告緩刑
+  if(useCustody && monthsRaw > 24){
+    issues.push(`主刑（有期徒刑${monthsRaw}月）逾2年，依刑法第74條規定不得宣告緩刑`);
+  }
+  if(!useCustody && !useDetention && !useFineOnly){
+    issues.push('尚未於「主文量刑」勾選任何主刑類型，無從判斷是否符合緩刑要件');
+  }
+
+  const basis1 = document.getElementById('probBasis1').checked;
+  const basis2 = document.getElementById('probBasis2').checked;
+  const isRecidivist = document.getElementById('recidivist').checked;
+
+  // 累犯排除邏輯：累犯（刑法47條）定義為受徒刑執行完畢或一部執行而赦免後，5年內故意再犯有期徒刑以上之罪，
+  // 此要件與緩刑第74條第1項第1、2款「未曾受宣告」或「5年內未再犯」之要件互相矛盾
+  if(isRecidivist){
+    issues.push('已勾選「累犯」（刑法第47條），累犯定義即為徒刑執行完畢或一部執行而赦免後5年內故意再犯有期徒刑以上之罪，與刑法第74條第1項第1款「未曾受有期徒刑以上刑之宣告」及第2款「5年內未再犯」之緩刑要件顯相矛盾，原則上不得宣告緩刑（除前案與本案犯罪型態、時間等有特殊個案情形，仍請審慎確認並自行敘明理由）');
+    if(basis1){
+      issues.push('「累犯」與已勾選之「緩刑法律依據第74條第1項第1款」互相矛盾，請重新確認被告是否確實未曾受有期徒刑以上刑之宣告');
+    }
+  }
+
+  if(!basis1 && !basis2){
+    issues.push('尚未勾選緩刑法律依據（刑法第74條第1項第1款或第2款），請確認被告是否符合「未曾受有期徒刑以上刑之宣告」或「執行完畢／赦免後5年內未再犯」其中之一');
+  }
+
+  // 軟性提醒：不當然阻卻緩刑，但屬於法院審酌「是否認以暫不執行為適當」之常見考量因子
+  const sentDeny = document.querySelector('.sentFactor[value="deny"]').checked;
+  const sentHarm = document.querySelector('.sentFactor[value="harm"]').checked;
+  if(sentDeny){
+    advisories.push('已勾選「犯後否認犯行，未見悔意」，可能不利於法院認定「以暫不執行為適當」，建議謹慎評估是否仍適合宣告緩刑');
+  }
+  if(sentHarm){
+    advisories.push('已勾選「犯罪所生危害不容輕忽」，量刑審酌上可能影響緩刑之宣告與否，建議一併於量刑理由中說明');
+  }
+
+  const reminder = '提醒：緩刑僅屬法院「得」宣告事項，除形式要件外，尚須綜合刑法第57條各款情狀，認被告「以暫不執行為適當」，始得宣告，並非形式要件具備即當然宣告緩刑。';
+
+  if(issues.length){
+    hint.style.color = '#ff5555';
+    hint.style.fontWeight = '700';
+    hint.innerHTML = '⚠ ' + issues.join('；') + '。'
+      + (advisories.length ? '<br>ℹ ' + advisories.join('；') + '。' : '')
+      + '<br><span style="color:var(--ink-soft); font-weight:400;">' + reminder + '</span>';
+  } else if(advisories.length){
+    hint.style.color = '#e0a25c';
+    hint.style.fontWeight = '600';
+    hint.innerHTML = 'ℹ 形式要件已具備，惟：' + advisories.join('；') + '。'
+      + '<br><span style="color:var(--ink-soft); font-weight:400;">' + reminder + '</span>';
+  } else {
+    hint.style.color = '#7fd88f';
+    hint.style.fontWeight = '600';
+    hint.innerHTML = '✓ 依目前填寫內容，形式上符合刑法第74條緩刑宣告要件。'
+      + '<br><span style="color:var(--ink-soft); font-weight:400;">' + reminder + '</span>';
+  }
 }
 
 function updateRangeHints(){
   const monthHint = document.getElementById('monthRangeHint');
   const fineHint = document.getElementById('fineRangeHint');
+  const fineShouldHint = document.getElementById('fineShouldHint');
   const sel = getSelectedMainCrime();
   if(!sel){
     if(monthHint) monthHint.textContent = '（請先於「罪數關係」選擇主要罪名，才能顯示法定刑範圍提示）';
     if(fineHint) fineHint.textContent = '';
+    if(fineShouldHint) fineShouldHint.textContent = '';
     return;
   }
   const d = sel.data;
@@ -1474,12 +2078,22 @@ function updateRangeHints(){
       fineHint.textContent = `法定罰金上限：${d.fineMax}（${fineTypeText[d.fineType]}）`;
     }
   }
+  if(fineShouldHint){
+    if(d.fineType === 'mandatory'){
+      fineShouldHint.textContent = `⚠ 本罪為法定應併科罰金，請務必勾選併科罰金（上限${d.fineMax}）`;
+    } else if(d.fineType === 'optional'){
+      fineShouldHint.textContent = `本罪得併科罰金，是否併科由法院依個案裁量（上限${d.fineMax}）`;
+    } else {
+      fineShouldHint.textContent = `本罪罰金為選科制，通常不與有期徒刑併科；如欲單獨科處罰金，請改用上方「罰金（作為主刑）」選項，而非此處之併科罰金`;
+    }
+  }
 }
 
 function updateCommuteWarning(){
   const box = document.getElementById('commuteWarning');
   if(!box) return;
-  const mode = document.querySelector('input[name="concursus"]:checked').value;
+  const mode = getConcursusMode();
+  const radios = [...document.querySelectorAll('input[name="commuteRateChoice"]')];
 
   if(mode === 'separate'){
     const checkedKeys = [...document.querySelectorAll('.crimeChk:checked')].map(c=>c.value).filter(v=>v!=='custom' && crimeData[v]);
@@ -1494,13 +2108,20 @@ function updateCommuteWarning(){
   }
 
   const sel = getSelectedMainCrime();
-  if(!sel){
-    box.style.display = 'none';
-    return;
-  }
-  if(sel.data.max > 60){
+  const useCustody = document.querySelector('.mainPenaltyType[value="custody"]').checked;
+  const monthsRaw = parseInt(document.getElementById('mainPenaltyMonths').value, 10) || 0;
+
+  const legalIneligible = !!(sel && sel.data.max > 60);
+  const sentenceIneligible = useCustody && monthsRaw > 6;
+
+  if(legalIneligible){
     box.style.display = 'block';
-    box.textContent = `⚠ 「${sel.data.label}」法定最重本刑逾5年，依刑法第41條規定不得諭知易科罰金；若宣告刑為6月以下，僅得諭知易服社會勞動。目前主文預覽仍會照您填寫的內容產生「有期徒刑如易科罰金」等字樣，請務必自行刪改，避免誤繕。`;
+    box.textContent = `⚠ 「${sel.data.label}」法定最重本刑逾5年，依刑法第41條規定不得諭知易科罰金；若宣告刑為6月以下，僅得諭知易服社會勞動。已自動取消上方折算標準勾選；建議一併取消勾選「主文顯示得易科罰金／易服勞役文字」，否則即時預覽中該部分文字將以紅字加粗標示提醒您注意。`;
+    radios.forEach(r=>{ r.checked = false; });
+  } else if(sentenceIneligible){
+    box.style.display = 'block';
+    box.textContent = `⚠ 主刑（有期徒刑${monthsRaw}月）逾6月，不符合刑法第41條「受六月以下有期徒刑或拘役之宣告」之要件，已自動取消上方折算標準勾選；建議一併取消勾選「主文顯示得易科罰金／易服勞役文字」，否則即時預覽中該部分文字將以紅字加粗標示提醒您注意。`;
+    radios.forEach(r=>{ r.checked = false; });
   } else {
     box.style.display = 'none';
   }
@@ -1517,7 +2138,7 @@ function buildSentenceEstimate(){
 
   const listLine = '<strong>已勾選罪名：</strong>' + checkedKeys.map(k=>crimeData[k].label).join('、');
 
-  const mode = document.querySelector('input[name="concursus"]:checked').value;
+  const mode = getConcursusMode();
   let lines = [listLine, ''];
 
   const commuteNote = (r)=>{
@@ -1559,6 +2180,15 @@ function buildSentenceEstimate(){
 // ---------- master render ----------
 function render(){
   const out = document.getElementById('output');
+
+  // 先同步所有連動鎖定／限制狀態，確保下方文字生成時使用最新（本次變動後）的狀態，避免延遲一輪才反映
+  updateMainPenaltyTypeAvailability();
+  syncFineInVerdictLock();
+  syncShowCommuteLock();
+  syncDisposalLaw300Lock();
+  syncDisposalLaw450Lock();
+  syncProsecutorJoinedField();
+
   let sections = [];
 
   sections.push(buildCauseParagraph() + '\n\n　　主　文\n' + buildVerdictParagraph() + '\n\n　　事實及理由');
@@ -1579,10 +2209,10 @@ function render(){
   bodyParas = bodyParas.concat(buildAdvParagraph('advLegalChange', 'advLegalChangeText'));       // 1 法律變更
   bodyParas.push(buildCrimeParagraph());                                                          // 2 核被告所為
   bodyParas = bodyParas.concat(buildAdvParagraph('advPrepAttempt', 'advPrepAttemptText'));         // 3 預備、未遂
-  bodyParas = bodyParas.concat(buildAdvParagraph('advAbsorption', 'advAbsorptionText'));           // 4 吸收關係
+  bodyParas = bodyParas.concat(buildAbsorptionParagraph());           // 4 吸收關係
   bodyParas = bodyParas.concat(buildAdvParagraph('advContinuous', 'advContinuousText'));           // 5 接續犯
   bodyParas = bodyParas.concat(buildAdvParagraph('advOngoing', 'advOngoingText'));                 // 6 繼續犯
-  bodyParas = bodyParas.concat(buildAdvParagraph('advChangeCharge', 'advChangeChargeText'));       // 7 變更起訴法條
+  bodyParas = bodyParas.concat(buildChangeChargeParagraph());       // 7 變更起訴法條
   bodyParas = bodyParas.concat(buildJointHelperParagraphs());                                      // 8 共同正犯、幫助犯
   bodyParas = bodyParas.concat(buildConcursusTheoryParagraphs());                                  // 9 想像競合／數罪併罰
   bodyParas = bodyParas.concat(buildAdvParagraph('advProsecutorError', 'advProsecutorErrorText')); // 10 檢察官誤會、疏漏部分
@@ -1605,8 +2235,10 @@ function render(){
     '449-1': '第449條第1項前段',
     '449-2': '第449條第2項',
     '449-3': '第449條第3項',
+    '450-1': '第450條第1項',
     '451-1-4': '第451條之1第4項',
-    '454-2': '第454條第2項'
+    '454-2': '第454條第2項',
+    '300': '第300條'
   };
   const disposalChecked = [...document.querySelectorAll('.disposalLaw:checked')].map(c=>c.value);
   const disposalText = disposalChecked.length
@@ -1617,34 +2249,45 @@ function render(){
   const appealNo = mil ? '六' : '五';
   sections.push(appealNo + '、如不服本判決，得於判決書送達之翌日起20日內，以書狀敘述理由（應附繕本），向本院提起上訴。');
 
-  const prosecutor = document.getElementById('prosecutorName').value.trim();
-  if(prosecutor) sections.push(`本案經檢察官${prosecutor}聲請以簡易判決處刑${document.getElementById('hasJoinedCase').checked?'及移送併辦':''}。`);
+  const reqProsecutor = document.getElementById('prosecutorNameReq').value.trim();
+  const hasJoinedForProsecutor = document.getElementById('hasJoinedCase').checked;
+  const joinedSameAsReq = document.getElementById('prosecutorJoinedSameAsReq').checked;
+  const joinedProsecutor = document.getElementById('prosecutorNameJoined').value.trim();
+  if(reqProsecutor){
+    if(!hasJoinedForProsecutor){
+      sections.push(`本案經檢察官${reqProsecutor}聲請以簡易判決處刑。`);
+    } else if(joinedSameAsReq || !joinedProsecutor || joinedProsecutor === reqProsecutor){
+      sections.push(`本案經檢察官${reqProsecutor}聲請以簡易判決處刑及移送併辦。`);
+    } else {
+      sections.push(`本案經檢察官${reqProsecutor}聲請以簡易判決處刑，檢察官${joinedProsecutor}移送併辦。`);
+    }
+  }
 
   const y = document.getElementById('judgeDateYear').value.trim();
   const mo = document.getElementById('judgeDateMonth').value.trim();
   const d = document.getElementById('judgeDateDay').value.trim();
   const judgeDate = (y && mo && d) ? `${y}　年　　${mo}　月　　${d}　日` : '＿＿＿';
   const judgeName = document.getElementById('judgeName').value.trim();
-  const clerkName = document.getElementById('clerkName').value.trim();
   let footer = [];
   footer.push(`中　　華　　民　　國　　${judgeDate}`);
   footer.push(`　　　　　　　　　${judgeName ? '橋頭簡易庭　法　官　'+judgeName : '（庭別）　法　官　＿＿＿'}`);
-  footer.push('以上正本證明與原本無異。');
-  footer.push('如不服本判決，應於判決送達之日起20日內向本院提出上訴書狀。');
-  footer.push(`中　　華　　民　　國　　${judgeDate}`);
-  footer.push(`　　　　　　　　　　 　　　　 書記官　${clerkName || '＿＿＿'}`);
+  footer.push('得上訴（20日）');
   sections.push(footer.join('\n'));
 
   const probTable = buildProbationTable();
   let appendix = '\n附錄本案論罪科刑法條\n' + buildAppendixLaws();
   if(probTable) appendix += '\n\n' + probTable;
 
-  out.textContent = sections.join('\n\n') + '\n' + appendix;
+  {
+    const rawFinalText = sections.join('\n\n') + '\n' + appendix;
+    out.innerHTML = applyRedMarkers(escapeHtml(rawFinalText));
+  }
   buildSentenceEstimate();
   updateVerdictPreview();
   updateHeavyCrimeLawText();
   updateRangeHints();
   updateCommuteWarning();
+  updateProbationEligibility();
 }
 
 function copyOutput(){
@@ -1667,6 +2310,7 @@ function downloadOutput(){
 
 // ---------- 開啟工具時的初始狀態：所有勾選選項預設不勾選，僅保留最小必要預設值 ----------
 addForfeitItem(); // 沒收／追徵預設開啟一筆空白項目，供使用者自行填寫或新增更多
+addDefendantItem(); // 被告預設開啟一筆空白項目
 
 document.getElementById('judgeName').value = '林書緯';
 {
@@ -1688,18 +2332,26 @@ function syncAllToggles(){
   syncToggleBox('hasNewEvidence_box', document.getElementById('hasNewEvidence').checked);
   syncToggleBox('crime_custom_box', document.querySelector('.crimeChk[value="custom"]').checked);
   syncToggleBox('splitByItem_box', document.getElementById('splitByItem').checked);
-  syncToggleBox('concursus_imagine_box', document.querySelector('input[name="concursus"]:checked').value === 'imagine');
-  syncToggleBox('confession_yes_box', document.querySelector('input[name="confession"]:checked').value === 'yes');
+  syncToggleBox('concursus_imagine_box', getConcursusMode() === 'imagine');
+  syncToggleBox('concursus_separate_box', getConcursusMode() === 'separate');
+  syncToggleBox('confession_yes_box', getConfessionValue() === 'yes');
   syncToggleBox('hasJoinedCase_box', document.getElementById('hasJoinedCase').checked);
   syncToggleBox('sentFactor_education_box', document.querySelector('.sentFactor[value="education"]').checked);
   syncToggleBox('hasProbation_box', document.getElementById('hasProbation').checked);
   syncToggleBox('hasCondition_box', document.getElementById('hasCondition').checked);
+  syncToggleBox('hasEducationCondition_box', document.getElementById('hasEducationCondition').checked);
   syncToggleBox('dv38_box', document.querySelector('.probSupervision[value="dv38"]').checked);
   syncToggleBox('hasFineInVerdict_box', document.getElementById('hasFineInVerdict').checked);
   syncToggleBox('jointPrincipal_box', document.getElementById('jointPrincipal').checked);
   ['advLegalChange','advPrepAttempt','advAbsorption','advContinuous','advOngoing','advChangeCharge','advProsecutorError'].forEach(id=>{
     syncToggleBox(id+'_box', document.getElementById(id).checked);
   });
+  syncProsecutorJoinedField();
+  syncDisposalLaw300Lock();
+  syncDisposalLaw450Lock();
+  syncFineInVerdictLock();
+  updateMainPenaltyTypeAvailability();
+  syncShowCommuteLock();
 }
 syncAllToggles();
 
