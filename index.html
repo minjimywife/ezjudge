@@ -373,7 +373,7 @@
       <button type="button" class="btn-mini" onclick="addDefendantItem()">＋新增被告</button>
       <div class="sub-note">姓名僅用於自動生成「主文」段落之被告稱謂，不影響理由欄其他段落（理由欄仍以「被告」稱之，符合聲請簡易判決處刑書之通例）。若新增2名以上被告，案由欄將自動改為「上列被告等因…」。</div>
       <div class="sub-note" style="margin-top:8px; padding:8px 10px; border-left:3px solid var(--accent); background:var(--accent-soft); color:var(--ink);">
-        <strong style="color:var(--accent);">繕打前注意事項：</strong><br>
+        <strong style="color:var(--accent);">繕打前注意事項：</strong> <strong style="color:#7fd88f;">送達很重要</strong><br>
         1. 記得查戶籍地址是否變動<br>
         2. 若為役男年齡，要確認是否服役中<br>
         3. 注意是否在監押
@@ -556,14 +556,15 @@
 
     <fieldset>
       <legend>減輕／加重事由</legend>
-      <div class="sub-note">以下均為選填，非每案均有減輕／加重事由；本區塊之敘述僅於個別勾選時才會生成。若不涉及洗錢防制法第23條第3項自白減輕之討論（例如非洗錢罪名），下方兩個自白選項均可不勾選，將不生成該段落。</div>
-      <label class="row"><input type="radio" name="confession" value="none"> 被告未自白（僅坦承提供帳戶，否認幫助故意），不予依洗錢防制法第23條第3項減輕</label>
-      <label class="row"><input type="radio" name="confession" value="yes"> 被告偵查中即自白犯行，依洗錢防制法第23條第3項前段規定減輕其刑</label>
-      <div class="indent-fields" id="confession_yes_box">
-        <label class="row"><input type="checkbox" id="extendedConfessionReason"> 加註「聲請簡易判決致無從於審判中自白」之例外適用說明（被告僅於偵查中自白，因檢察官逕向法院聲請簡易判決處刑，致其無從於審判中自白時使用）</label>
-      </div>
+      <div class="sub-note">以下均為選填，非每案均有減輕／加重事由；本區塊之敘述僅於個別勾選時才會生成。洗錢防制法第23條第3項自白減輕已統一移至下方「特別法加重／減輕事由」欄位處理。</div>
       <label class="row"><input type="checkbox" id="surrender"> 被告符合自首要件，依刑法第62條前段規定減輕其刑</label>
       <label class="row"><input type="checkbox" id="recidivist"> 被告構成累犯，依刑法第47條第1項規定加重其刑（將置於「加重事由」段落）</label>
+
+      <div class="grp-title">其他刑法總則減輕事由（可複選，每項各自依刑法第66條減輕至二分之一）</div>
+      <label class="row"><input type="checkbox" id="age18Reduce"> 被告行為時14歲以上未滿18歲，依刑法第18條第2項規定，得減輕其刑</label>
+      <label class="row"><input type="checkbox" id="age80Reduce"> 被告行為時滿80歲，依刑法第18條第3項規定，得減輕其刑</label>
+      <label class="row"><input type="checkbox" id="mentalReduce"> 被告行為時因精神障礙或其他心智缺陷，致辨識行為違法或依其辨識而行為之能力顯著減低，依刑法第19條第2項規定，得減輕其刑</label>
+      <label class="row"><input type="checkbox" id="mitigate59"> 犯罪之情狀顯可憫恕，認科以最低度刑仍嫌過重，依刑法第59條規定，酌量減輕其刑</label>
 
       <label class="row"><input type="checkbox" id="juvenile112"> 該當兒童及少年福利與權益保障法第112條第1項</label>
       <div class="indent-fields" id="juvenile112_box">
@@ -577,6 +578,33 @@
           <div style="margin-top:6px; font-size:12px; line-height:1.9; background:#101012; border:1px solid var(--line); border-radius:4px; padding:10px 12px; color:var(--ink-soft); white-space:pre-wrap;">成年人教唆、幫助或利用兒童及少年犯罪或與之共同實施犯罪或故意對其犯罪者，加重其刑至二分之一。但各該罪就被害人係兒童及少年已定有特別處罰規定者，從其規定。</div>
         </details>
       </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>特別法加重／減輕事由</legend>
+      <div class="sub-note">以下依現行條文列出常見特別法之自首、自白、窩裡反等寬典規定，僅於本案確實涉及該特別法時勾選。</div>
+
+      <div class="grp-title">洗錢防制法</div>
+      <label class="row"><input type="radio" name="confession" value="none"> 被告未自白（僅坦承提供帳戶，否認幫助故意），不予依第23條第3項減輕</label>
+      <label class="row"><input type="radio" name="confession" value="yes"> 被告偵查中即自白犯行，依第23條第3項前段規定減輕其刑</label>
+      <div class="indent-fields" id="confession_yes_box">
+        <label class="row"><input type="checkbox" id="extendedConfessionReason"> 加註「聲請簡易判決致無從於審判中自白」之例外適用說明（被告僅於偵查中自白，因檢察官逕向法院聲請簡易判決處刑，致其無從於審判中自白時使用）</label>
+      </div>
+
+      <div class="grp-title" style="margin-top:10px;">毒品危害防制條例</div>
+      <label class="row"><input type="checkbox" id="drug17_1"> 第17條第1項：供出毒品來源，因而查獲其他正犯或共犯，減輕或免除其刑</label>
+      <label class="row"><input type="checkbox" id="drug17_2"> 第17條第2項：於偵查及歷次審判中均自白，減輕其刑</label>
+      <label class="row"><input type="checkbox" id="drug17_3"> 第17條第3項：因供自己施用而犯運輸毒品罪，情節輕微，得減輕其刑</label>
+
+      <div class="grp-title" style="margin-top:10px;">組織犯罪防制條例</div>
+      <label class="row"><input type="checkbox" id="org8_1"> 第8條第1項前段：自首並自動解散或脫離犯罪組織（或因提供資料查獲該組織），減輕或免除其刑</label>
+      <label class="row"><input type="checkbox" id="org8_1b"> 第8條第1項後段：偵查及歷次審判中均自白，減輕其刑</label>
+
+      <div class="grp-title" style="margin-top:10px;">詐欺犯罪危害防制條例</div>
+      <label class="row"><input type="checkbox" id="fraud46"> 第46條：自首並自動繳交全部犯罪所得（因而查獲其他正犯或共犯者，得減輕或免除；未查獲者，減輕其刑）</label>
+      <label class="row"><input type="checkbox" id="fraud47"> 第47條：犯刑法第339條之4加重詐欺罪，於偵查及歷次審判中均自白，並繳回犯罪所得（如有），減輕其刑</label>
+
+      <div class="sub-note" style="margin-top:8px; color:var(--accent);">提醒：上列各項多為「減輕或免除其刑」之寬典規定，惟本工具之宣告刑試算僅能模擬「減輕」（減至二分之一）效果，無法模擬「免除其刑」；如個案應為免刑，請自行注意判決應諭知免刑而非科刑判決，且免刑判決不得以簡易判決處刑逕行宣告，應依通常程序辦理，請特別留意程序選擇是否正確。</div>
     </fieldset>
 
     <fieldset>
@@ -674,7 +702,7 @@
       <label class="row" id="disposalLaw300Row"><input type="checkbox" class="disposalLaw" value="300" id="disposalLaw300"><span>刑事訴訟法第300條<span class="law-desc">得就起訴之犯罪事實，變更檢察官所引應適用之法條；本案如有「變更起訴法條」時建議勾選</span></span></label>
       <div class="sub-note" id="disposalLaw300LockHint" style="display:none;"></div>
       <label class="row"><input type="checkbox" class="disposalLaw" value="449-1" checked><span>刑事訴訟法第449條第1項前段<span class="law-desc">第一審法院依被告偵查中自白或其他現存證據已足認定犯罪者，得因檢察官聲請逕以簡易判決處刑</span></span></label>
-      <label class="row"><input type="checkbox" class="disposalLaw" value="449-2"><span>刑事訴訟法第449條第2項<span class="law-desc">檢察官依通常程序起訴，經被告自白犯罪，法院認宜以簡易判決處刑者，亦得逕以簡易判決處刑</span></span></label>
+      <label class="row"><input type="checkbox" class="disposalLaw" value="449-2"><span>刑事訴訟法第449條第2項 <strong style="color:#7fd88f; font-size:10.5px; font-weight:700;">應注意若非獨任案件，轉簡易應經合議庭裁定</strong><span class="law-desc">檢察官依通常程序起訴，經被告自白犯罪，法院認宜以簡易判決處刑者，亦得逕以簡易判決處刑</span></span></label>
       <label class="row" id="disposalLaw449_3Row"><input type="checkbox" class="disposalLaw" value="449-3" checked disabled><span>刑事訴訟法第449條第3項 <strong style="color:#7fd88f; font-size:10.5px; font-weight:700;">🔒 恆定勾選：簡易判決程序必然適用本項規定，不可取消。</strong><span class="law-desc">所科之刑以宣告緩刑、得易科罰金或得易服社會勞動之有期徒刑及拘役或罰金為限</span></span></label>
       <label class="row" id="disposalLaw450_1Row"><input type="checkbox" class="disposalLaw" value="450-1" id="disposalLaw450_1"><span>刑事訴訟法第450條第1項<span class="law-desc">以簡易判決處刑時，得併科沒收或為其他必要之處分；本案有宣告沒收時建議勾選</span></span></label>
       <div class="sub-note" id="disposalLaw450_1LockHint" style="display:none;"></div>
@@ -693,6 +721,7 @@
       <label class="row" style="margin-top:10px;"><input type="radio" name="mainPenaltyType" class="mainPenaltyType" value="custody" checked> 有期徒刑 <input type="text" id="mainPenaltyMonths" style="width:50px; margin-left:6px;" value="4"> 月</label>
       <div class="sub-note" id="monthRangeHint" style="margin-top:-4px;"></div>
       <label class="row"><input type="radio" name="mainPenaltyType" class="mainPenaltyType" value="detention"> 拘役 <input type="text" id="mainPenaltyDetentionDays" style="width:50px; margin-left:6px;" placeholder="日數"> 日</label>
+      <div class="sub-note" style="margin-top:-4px;">刑法第33條第4款：拘役法定範圍為1日以上60日未滿；遇加重（如累犯，依第67條）得加至120日；若有減輕事由（依第66條），下限得低於1日以上之比例遞減，實務上仍以整數日折算。</div>
       <label class="row"><input type="radio" name="mainPenaltyType" class="mainPenaltyType" value="fineOnly"> 罰金（作為主刑，非併科）新臺幣 <input type="text" id="mainPenaltyFineOnly" style="width:80px; margin-left:6px;" placeholder="純數字"> 元</label>
 
       <label class="row" style="margin-top:10px;"><input type="checkbox" id="hasFineInVerdict"> 併科罰金</label>
@@ -1343,7 +1372,7 @@ const crimeBareLabel = {
 
 function monthsToText(m){
   m = Math.round(m);
-  if(m<=0) return '未達1月（僅供參考，實務上會依個案調整至最低可宣告之刑度，並非當然可易科拘役或罰金）';
+  if(m < 1) m = 1;
   const y = Math.floor(m/12);
   const mm = m%12;
   let s = '';
@@ -1497,10 +1526,85 @@ function buildReducingParagraphs(){
     paras.push('被告於犯罪未被發覺前主動向偵查機關自首並接受裁判，爰依刑法第62條前段規定，減輕其刑。');
     reductionCount++;
   }
+  if(document.getElementById('age18Reduce').checked){
+    paras.push('被告行為時已滿14歲，未滿18歲，爰依刑法第18條第2項規定，減輕其刑。');
+    reductionCount++;
+  }
+  if(document.getElementById('age80Reduce').checked){
+    paras.push('被告行為時已滿80歲，爰依刑法第18條第3項規定，減輕其刑。');
+    reductionCount++;
+  }
+  if(document.getElementById('mentalReduce').checked){
+    paras.push('被告行為時因精神障礙或其他心智缺陷，致其辨識行為違法或依其辨識而行為之能力顯著減低，爰依刑法第19條第2項規定，減輕其刑。');
+    reductionCount++;
+  }
+  if(document.getElementById('mitigate59').checked){
+    paras.push('審酌被告犯罪之情狀顯可憫恕，縱科以法定最低度刑仍嫌過重，爰依刑法第59條規定，酌量減輕其刑。');
+    reductionCount++;
+  }
+  if(document.getElementById('drug17_1').checked){
+    paras.push('被告供出毒品來源，因而查獲其他正犯或共犯，爰依毒品危害防制條例第17條第1項規定，減輕其刑。');
+    reductionCount++;
+  }
+  if(document.getElementById('drug17_2').checked){
+    paras.push('被告於偵查及歷次審判中均自白，爰依毒品危害防制條例第17條第2項規定，減輕其刑。');
+    reductionCount++;
+  }
+  if(document.getElementById('drug17_3').checked){
+    paras.push('被告因供自己施用而犯運輸毒品罪，情節輕微，爰依毒品危害防制條例第17條第3項規定，減輕其刑。');
+    reductionCount++;
+  }
+  if(document.getElementById('org8_1').checked){
+    paras.push('被告自首並自動解散或脫離其所屬之犯罪組織，爰依組織犯罪防制條例第8條第1項前段規定，減輕其刑。');
+    reductionCount++;
+  }
+  if(document.getElementById('org8_1b').checked){
+    paras.push('被告於偵查及歷次審判中均自白，爰依組織犯罪防制條例第8條第1項後段規定，減輕其刑。');
+    reductionCount++;
+  }
+  if(document.getElementById('fraud46').checked){
+    paras.push('被告自首並自動繳交全部犯罪所得，爰依詐欺犯罪危害防制條例第46條規定，減輕其刑。');
+    reductionCount++;
+  }
+  if(document.getElementById('fraud47').checked){
+    paras.push('被告於偵查及歷次審判中均自白，並繳回犯罪所得（如有），爰依詐欺犯罪危害防制條例第47條規定，減輕其刑。');
+    reductionCount++;
+  }
   if(reductionCount >= 2){
     paras.push('被告合於前開數種減輕原因，爰依刑法第70條規定，遞減其刑。');
   }
   return paras;
+}
+
+// 想像競合模式下，若「輕罪」（未被選為主要罪名之其他已勾選罪名）本身有特定之減輕事由可資適用，
+// 雖從一重處斷不影響其法定刑之計算，仍應於理由中敘明業將輕罪部分之減輕情形一併納入量刑審酌。
+function buildLightCrimeReductionNote(){
+  const mode = getConcursusMode();
+  if(mode !== 'imagine') return [];
+  const heavyKey = document.getElementById('heavierCrimeKey') ? document.getElementById('heavierCrimeKey').value : '';
+  if(!heavyKey) return [];
+  const checkedKeys = [...document.querySelectorAll('.crimeChk:checked')].map(c=>c.value).filter(v=>v!=='custom' && crimeData[v]);
+  const lightKeys = checkedKeys.filter(k=>k!==heavyKey);
+  if(lightKeys.length===0) return [];
+
+  let notes = [];
+  const isMLLight = lightKeys.some(k=>k==='ml'||k==='mlAttempt');
+  const isFraudAggLight = lightKeys.includes('fraudAgg');
+
+  if(isMLLight){
+    const confession = getConfessionValue();
+    if(confession === 'yes'){
+      notes.push('被告就想像競合輕罪（幫助洗錢罪）部分，已合於洗錢防制法第23條第3項自白減輕之要件，該部分減輕情形，本院於後述量刑審酌時一併衡酌。');
+    } else if(confession === 'none'){
+      notes.push('被告就想像競合輕罪（幫助洗錢罪）部分，尚不合於洗錢防制法第23條第3項自白減輕之要件，惟該部分量刑事由，本院於後述量刑審酌時仍一併衡酌。');
+    }
+  }
+  if(isFraudAggLight && document.getElementById('fraud47').checked){
+    notes.push('被告就想像競合輕罪（加重詐欺取財罪）部分，已合於詐欺犯罪危害防制條例第47條自白減輕之要件，該部分減輕情形，本院於後述量刑審酌時一併衡酌。');
+  }
+  if(notes.length===0) return [];
+
+  return ['想像競合犯侵害數法益者皆成立犯罪，論罪時須輕、重罪併舉論述，包括各罪有無加重、減免其刑之情形，亦應說明論列，量刑時併衡酌輕罪部分量刑事由，評價始為充足；被告固應從一重處斷，然輕罪部分亦須一併評價。' + notes.join('')];
 }
 
 const sentFactorText = {
@@ -1514,6 +1618,26 @@ const sentFactorText = {
   refunded: '部分款項業經金融機構或被害人自行取回、發還，已足填補告訴人因犯罪所受損害',
   harm: '犯罪所生危害（詐得金額、被害人數等情節）不容輕忽'
 };
+
+// 想像競合模式下，若「輕罪」為幫助洗錢罪（法定應併科罰金），但使用者於主文量刑未勾選併科罰金，
+// 自動生成「輕罪不併科罰金之說明」，援引刑法第55條但書封鎖作用及最高法院111年度台上字第977號判決意旨。
+function buildLightCrimeNoFineParagraph(){
+  const mode = getConcursusMode();
+  if(mode !== 'imagine') return '';
+  const heavyKey = document.getElementById('heavierCrimeKey') ? document.getElementById('heavierCrimeKey').value : '';
+  if(!heavyKey || heavyKey==='ml' || heavyKey==='mlAttempt') return '';
+  const checkedKeys = [...document.querySelectorAll('.crimeChk:checked')].map(c=>c.value).filter(v=>v!=='custom' && crimeData[v]);
+  const lightKey = checkedKeys.find(k=>k==='ml'||k==='mlAttempt');
+  if(!lightKey) return '';
+  if(document.getElementById('hasFineInVerdict').checked) return '';
+
+  const heavy = computeRangeFor(heavyKey);
+  const light = computeRangeFor(lightKey);
+  if(!heavy || !light) return '';
+  const lightLabel = light.label;
+
+  return `按刑法第55條但書規定之想像競合輕罪封鎖作用，固應結合輕罪所定法定最輕應併科之罰金刑，然法院經整體觀察後，得基於「充分但不過度」評價之考量，決定是否宣告輕罪之併科罰金刑，如未悖於罪刑相當原則，均無不可（最高法院111年度台上字第977號判決意旨參照）。經查，被告以一行為同時該當${heavy.label}（處${monthsToText(heavy.min)}以上${monthsToText(heavy.max)}以下有期徒刑）及${lightLabel}（處${monthsToText(light.min)}以上${monthsToText(light.max)}以下有期徒刑，併科${light.fineMax}以下罰金），本院依想像競合犯關係，從一重論以${heavy.label}，審酌全案情節，因認被告科以主文所示之刑已足使其罪刑相當，認無再併科${lightLabel}罰金刑之必要，俾免過度評價，附此敘明。`;
+}
 
 function buildSentencingParagraph(){
   const checked = [...document.querySelectorAll('.sentFactor:checked')].map(c=>c.value);
@@ -1835,9 +1959,29 @@ function computeRangeFor(key){
   if(document.getElementById('helperReduce').checked) reductions.push('幫助犯（刑法第30條第2項）');
   if(getConfessionValue() === 'yes') reductions.push('自白（洗錢防制法第23條第3項）');
   if(document.getElementById('surrender').checked) reductions.push('自首（刑法第62條）');
+  if(document.getElementById('age18Reduce').checked) reductions.push('未滿18歲（刑法第18條第2項）');
+  if(document.getElementById('age80Reduce').checked) reductions.push('滿80歲（刑法第18條第3項）');
+  if(document.getElementById('mentalReduce').checked) reductions.push('精神障礙辨識能力顯著減低（刑法第19條第2項）');
+  if(document.getElementById('mitigate59').checked) reductions.push('情堪憫恕酌減（刑法第59條）');
+  if(document.getElementById('drug17_1').checked) reductions.push('供出毒品來源查獲共犯（毒品危害防制條例第17條第1項）');
+  if(document.getElementById('drug17_2').checked) reductions.push('偵審均自白（毒品危害防制條例第17條第2項）');
+  if(document.getElementById('drug17_3').checked) reductions.push('自己施用運輸毒品情節輕微（毒品危害防制條例第17條第3項）');
+  if(document.getElementById('org8_1').checked) reductions.push('自首解散脫離組織（組織犯罪防制條例第8條第1項前段）');
+  if(document.getElementById('org8_1b').checked) reductions.push('偵審均自白（組織犯罪防制條例第8條第1項後段）');
+  if(document.getElementById('fraud46').checked) reductions.push('自首繳交犯罪所得（詐欺犯罪危害防制條例第46條）');
+  if(document.getElementById('fraud47').checked) reductions.push('偵審均自白並繳回所得（詐欺犯罪危害防制條例第47條）');
   reductions.forEach(()=>{ min /= 2; max /= 2; });
+  // 刑法第66條：有減輕其刑者，減輕至二分之一，其結果得低於刑法第33條所定有期徒刑一般最低度（2月）／拘役一般最低度（1日），
+  // 此為合法之遞減效果，不應強制拉回一般最低度；僅於「完全沒有減輕事由」時，才以法定最低度為下限。
+  const belowGeneralFloor = reductions.length > 0 && min < base.min;
+  if(reductions.length === 0){
+    if(min < base.min) min = base.min;
+  }
+  // 計算結果低於1月者，一律以整數1月為顯示下限，不呈現小數或日數
+  if(min < 1) min = 1;
+  if(max < 1) max = 1;
 
-  return {label: base.label, min, max, fineType: base.fineType, fineMax: base.fineMax, legalMaxOriginal, reductions, recidivist: document.getElementById('recidivist').checked};
+  return {label: base.label, min, max, fineType: base.fineType, fineMax: base.fineMax, legalMaxOriginal, reductions, recidivist: document.getElementById('recidivist').checked, belowGeneralFloor};
 }
 
 // ---------- verdict (主文) builder ----------
@@ -2156,6 +2300,9 @@ function buildSentenceEstimate(){
       const r = computeRangeFor(heavyKey);
       lines.push(`<strong>${mode === 'single' ? '所論罪名：' : '從一重論以：'}</strong>${r.label}`);
       lines.push(`<strong>試算宣告刑範圍：</strong>${monthsToText(r.min)} ～ ${monthsToText(r.max)}` + (r.recidivist? '（已計入累犯加重）':'') + (r.reductions.length? `（已依序遞減：${r.reductions.join('、')}）`:''));
+      if(r.belowGeneralFloor){
+        lines.push(`<span style="color:var(--accent)">ℹ 因有減輕事由，依刑法第66條規定，下限已低於有期徒刑一般法定最低度（2月）／拘役一般法定最低度（1日），此為合法遞減效果。</span>`);
+      }
       lines.push(`<strong>併科罰金：</strong>${fineTypeText[r.fineType]}${r.fineType!=='alternative' ? '（上限'+r.fineMax+'）' : ''}`);
       if(mode === 'imagine'){
         const others = checkedKeys.filter(k=>k!==heavyKey);
@@ -2219,8 +2366,11 @@ function render(){
   bodyParas = bodyParas.concat(buildJoinedCaseParagraph());                                        // 11 移送併辦部分
   bodyParas = bodyParas.concat(buildAggravatingParagraphs());                                      // 12 加重事由
   bodyParas = bodyParas.concat(buildReducingParagraphs());                                         // 13 減輕事由
+  bodyParas = bodyParas.concat(buildLightCrimeReductionNote());                                    // 14 想像競合輕罪減輕量刑因子註記
 
   bodyParas.push(buildSentencingParagraph());
+  const lightNoFine = buildLightCrimeNoFineParagraph();
+  if(lightNoFine) bodyParas.push(lightNoFine);
   const probation = buildProbationParagraph();
   if(probation) bodyParas.push(probation);
   bodyParas = bodyParas.filter(Boolean);
